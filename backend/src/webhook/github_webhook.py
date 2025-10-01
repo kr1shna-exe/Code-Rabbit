@@ -21,7 +21,7 @@ def verify_signature(payload: Any, signature: str):
 
 @router.post("/webhook")
 async def github_webhook(request: Request, background_tasks: BackgroundTasks, x_hub_signature_256: Optional[str] = Header(None, alias="X-Hub-Signature-256"), x_github_event: Optional[str] = Header(None, alias="X-GitHub-Event")):
-    print(f"New Webhook is being triggered...")
+    print(f"New Webhook is now being triggered...")
     payload = await request.body()
     if not verify_signature(payload, x_hub_signature_256):
         raise HTTPException(status_code=401, detail="Invalid signature")
@@ -57,9 +57,9 @@ async def github_webhook(request: Request, background_tasks: BackgroundTasks, x_
         )
         print(f"Diff generated successfully: {diff_data}")
         print(f"Total files changed: {len(diff_data['diff_files'])}")
-        print(f"Now cleaning up..")
-        repo_manager.clean_up(repo_path)
-        print("Completed cleanup")
+        # print(f"Now cleaning up..")
+        # repo_manager.clean_up(repo_path)
+        # print("Completed cleanup")
         return {
             "status": "success",
             "prn_number": pr_number,
