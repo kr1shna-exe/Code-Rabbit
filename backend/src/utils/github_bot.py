@@ -1,5 +1,5 @@
 from github import Github
-from config import settings
+from .config import settings
 from fastapi import HTTPException
 
 class GitHubBot:
