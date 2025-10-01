@@ -9,13 +9,14 @@ wheels/
 *.log
 
 # Virtual environments
-.venv
+backend/.venv
 .ENV
 env/
 env.bak/
 venv/
 # Environment variables
 .env
+.idea/
 
 # uv lock file (if you don't want to commit it)
 uv.lock
