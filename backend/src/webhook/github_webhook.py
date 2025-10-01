@@ -3,7 +3,7 @@ import hmac, hashlib, json
 from typing import Any, Optional
 from utils.config import settings
 from git_ops.repo_manager import RepoManager
-
+from ai.code_reviewer import review_code
 
 router = APIRouter()
 repo_manager = RepoManager(settings.temp_repo_dir)
@@ -56,9 +56,16 @@ async def github_webhook(request: Request, background_tasks: BackgroundTasks, x_
         )
         print(f"Diff generated successfully: {diff_data}")
         print(f"Total files changed: {len(diff_data['diff_files'])}")
-        print(f"Now cleaning up..")
-        repo_manager.clean_up(repo_path)
-        print("Completed cleanup")
+        print(f"Getting AI to review the code changes...")
+        ai_review = review_code(
+            diff = diff_data['full_diff'],
+            pr_title = pr_title,
+            files_changed = diff_data['diff_files']
+        )
+        print(f"AI review completed: {ai_review}")
+        # print(f"Now cleaning up..")
+        # repo_manager.clean_up(repo_path)
+        # print("Completed cleanup")
         return {
             "status": "success",
             "prn_number": pr_number,
