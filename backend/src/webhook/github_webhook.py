@@ -4,9 +4,11 @@ from typing import Any, Optional
 from utils.config import settings
 from git_ops.repo_manager import RepoManager
 from ai.code_reviewer import review_code
+from utils.github_bot import GitHubBot
 
 router = APIRouter()
 repo_manager = RepoManager(settings.temp_repo_dir)
+github_bot = GitHubBot()
 
 def verify_signature(payload: Any, signature: str):
     mac = hmac.new(
@@ -33,6 +35,7 @@ async def github_webhook(request: Request, background_tasks: BackgroundTasks, x_
     pr_number = pr.get("number")
     pr_title = pr.get("title", "")
     repo_url = repo.get("clone_url", "")
+    repo_full_name = repo.get("full_name", "")
     base_branch = pr.get("base", {}).get("ref", "main")
     head_branch = pr.get("head", {}).get("ref", "")
     print(f"Action: {action}")
@@ -63,6 +66,16 @@ async def github_webhook(request: Request, background_tasks: BackgroundTasks, x_
             files_changed = diff_data['diff_files']
         )
         print(f"AI review completed: {ai_review}")
+        print(f"Starting to send the ai review to the bot..")
+        comment = github_bot.post_review_comment(
+            repo_full_name = repo_full_name,
+            pr_number = pr_number,
+            ai_review = ai_review
+        )
+        if comment:
+            print(f"Successfully commented")
+        else:
+            print(f"Failed to comment")
         # print(f"Now cleaning up..")
         # repo_manager.clean_up(repo_path)
         # print("Completed cleanup")
