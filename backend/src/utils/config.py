@@ -1,0 +1,12 @@
+from pydantic_settings import BaseSettings, SettingsConfigDict
+
+class Settings(BaseSettings):
+    model_config = SettingsConfigDict(env_file = ".env", extra = "allow")
+    github_token: str
+    github_webhook_secret: str
+    gemini_api_key: str
+    groq_api_key: str
+    temp_repo_dir: str = "./temp_repos"
+    port: int = 8000
+
+settings = Settings()
