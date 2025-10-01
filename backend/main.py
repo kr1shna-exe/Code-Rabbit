@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from src.webhook.github_webhook import router as webhook_router
+from src.webhook.github_webhook import  as webhook_router
 from src.utils.config import settings
 import uvicorn
 
