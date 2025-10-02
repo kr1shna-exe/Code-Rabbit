@@ -8,7 +8,6 @@ from utils.github_bot import GitHubBot
 
 router = APIRouter()
 repo_manager = RepoManager(settings.temp_repo_dir)
-github_bot = GitHubBot()
 
 def verify_signature(payload: Any, signature: str):
     mac = hmac.new(
@@ -32,6 +31,7 @@ async def github_webhook(request: Request, background_tasks: BackgroundTasks, x_
     action = payload.get("action", "")
     pr = payload.get("pull_request", {})
     repo = payload.get("repository", {})
+    installation_id = payload.get("installation", {}).get("id")
     pr_number = pr.get("number")
     pr_title = pr.get("title", "")
     repo_url = repo.get("clone_url", "")
@@ -66,7 +66,8 @@ async def github_webhook(request: Request, background_tasks: BackgroundTasks, x_
             files_changed = diff_data['diff_files']
         )
         print(f"AI review completed: {ai_review}")
-        print(f"Starting to send the ai review to the bot..")
+        github_bot = GitHubBot(installation_id=installation_id)
+        print(f"Starting to send the ai review to the bot..: {installation_id}")
         comment = github_bot.post_review_comment(
             repo_full_name = repo_full_name,
             pr_number = pr_number,

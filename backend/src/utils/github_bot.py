@@ -1,9 +1,9 @@
-from github import Github, GithubIntegration, Auth
+from github import Github, Auth
 from .config import settings
 from fastapi import HTTPException
 
 class GitHubBot:
-    def __init__(self):
+    def __init__(self, installation_id: int):
         with open(settings.github_app_private_path, 'r') as key_file:
             private_key = key_file.read()
         auth = Auth.AppAuth(
@@ -11,7 +11,7 @@ class GitHubBot:
             private_key = private_key
         )
         self.auth = auth.get_installation_auth(
-            installation_id = settings.github_app_installation_id
+            installation_id = installation_id
         )
         self.github = Github(auth=self.auth)
         print(f"Github App authenticated.App Id: {settings.github_app_id}")
