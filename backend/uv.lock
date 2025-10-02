@@ -253,6 +253,7 @@ version = "0.1.0"
 source = { editable = "." }
 dependencies = [
     { name = "bandit" },
+    { name = "cryptography" },
     { name = "fastapi" },
     { name = "gitpython" },
     { name = "google-generativeai" },
@@ -260,6 +261,7 @@ dependencies = [
     { name = "pydantic" },
     { name = "pydantic-settings" },
     { name = "pygithub" },
+    { name = "pyjwt" },
     { name = "pylint" },
     { name = "python-dotenv" },
     { name = "redis" },
@@ -279,6 +281,7 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "bandit", specifier = ">=1.7.5" },
+    { name = "cryptography", specifier = ">=46.0.2" },
     { name = "fastapi", specifier = ">=0.104.0" },
     { name = "gitpython", specifier = ">=3.1.40" },
     { name = "google-generativeai", specifier = ">=0.3.0" },
@@ -286,6 +289,7 @@ requires-dist = [
     { name = "pydantic", specifier = ">=2.5.0" },
     { name = "pydantic-settings", specifier = ">=2.1.0" },
     { name = "pygithub", specifier = ">=2.1.1" },
+    { name = "pyjwt", specifier = ">=2.10.1" },
     { name = "pylint", specifier = ">=3.0.0" },
     { name = "python-dotenv", specifier = ">=1.0.0" },
     { name = "redis", specifier = ">=5.0.0" },

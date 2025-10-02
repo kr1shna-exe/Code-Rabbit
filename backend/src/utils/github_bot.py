@@ -1,10 +1,20 @@
-from github import Github
+from github import Github, GithubIntegration, Auth
 from .config import settings
 from fastapi import HTTPException
 
 class GitHubBot:
     def __init__(self):
-        self.github = Github(settings.github_bot_token)
+        with open(settings.github_app_private_path, 'r') as key_file:
+            private_key = key_file.read()
+        auth = Auth.AppAuth(
+            app_id = settings.github_app_id,
+            private_key = private_key
+        )
+        self.auth = auth.get_installation_auth(
+            installation_id = settings.github_app_installation_id
+        )
+        self.github = Github(auth=self.auth)
+        print(f"Github App authenticated.App Id: {settings.github_app_id}")
 
     def post_review_comment(self, repo_full_name: str, pr_number: int, ai_review: str):
         try:

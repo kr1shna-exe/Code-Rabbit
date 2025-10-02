@@ -17,6 +17,6 @@ venv/
 # Environment variables
 .env
 .idea/
-
+my-code-comment-bot.2025-10-01.private-key.pem
 # uv lock file (if you don't want to commit it)
 uv.lock
