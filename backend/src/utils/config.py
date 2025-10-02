@@ -6,8 +6,7 @@ class Settings(BaseSettings):
     github_webhook_secret: str
     github_bot_token: str
     github_app_id: int
-    github_app_private_key: str
-    github_app_installation_id: int
+    github_app_private_key_path: str
     gemini_api_key: str
     groq_api_key: str
     temp_repo_dir: str = "./temp_repos"
