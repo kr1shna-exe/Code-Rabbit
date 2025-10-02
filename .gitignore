@@ -33,6 +33,7 @@ venv/
 *.p8
 *.private-key
 my-code-comment-bot*.pem
+backend/src/services/graph_visualizer.py
 
 # Temporary files
 temp_repos/

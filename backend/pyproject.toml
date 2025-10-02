@@ -20,6 +20,10 @@ dependencies = [
     "redis>=5.0.0",
     "pyjwt>=2.10.1",
     "cryptography>=46.0.2",
+    "tree-sitter-javascript>=0.25.0",
+    "tree-sitter-typescript>=0.23.2",
+    "tree-sitter-go>=0.25.0",
+    "tree-sitter-rust>=0.24.0",
 ]
 
 [tool.uv]

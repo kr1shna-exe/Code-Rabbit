@@ -1,6 +1,6 @@
 import google.generativeai as genai
 from src.utils.config import settings
-
+from src.services.ast_parser import ASTAnalyzer
 genai.configure(api_key=settings.gemini_api_key)
 
 def review_code(diff: str, pr_title: str, files_changed: list):
