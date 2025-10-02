@@ -4,7 +4,7 @@ from fastapi import HTTPException
 
 class GitHubBot:
     def __init__(self, installation_id: int):
-        with open(settings.github_app_private_path, 'r') as key_file:
+        with open(settings.github_app_private_key_path, 'r') as key_file:
             private_key = key_file.read()
         auth = Auth.AppAuth(
             app_id = settings.github_app_id,
