@@ -10,13 +10,37 @@ wheels/
 
 # Virtual environments
 backend/.venv
+.venv/
 .ENV
 env/
 env.bak/
 venv/
+
 # Environment variables
 .env
+.env.local
+.env.*.local
+
+# IDE
 .idea/
-my-code-comment-bot.2025-10-01.private-key.pem
-# uv lock file (if you don't want to commit it)
+.vscode/
+*.swp
+*.swo
+
+# GitHub App Private Keys (CRITICAL!)
+*.pem
+*.key
+*.p8
+*.private-key
+my-code-comment-bot*.pem
+
+# Temporary files
+temp_repos/
+*.tmp
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# UV lock file (optional - decide if you want to commit)
 uv.lock
