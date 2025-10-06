@@ -18,7 +18,11 @@ class RepoManager:
         repo.git.checkout(f"origin/{head_branch}")
         return pr_dir
 
-    def get_diff(self, repo_path: Path, base_branch: str, head_branch: str):
+    def get_diff(self, repo_path, base_branch: str, head_branch: str):
+        # Ensure repo_path is a Path object
+        if not isinstance(repo_path, Path):
+            repo_path = Path(repo_path)
+
         repo = Repo(repo_path)
         diff = repo.git.diff(f"origin/{base_branch}...origin/{head_branch }")
         diff_files = repo.git.diff(f"origin/{base_branch}...origin/{head_branch}", name_only=True).split('\n')
