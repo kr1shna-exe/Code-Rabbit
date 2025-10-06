@@ -149,4 +149,7 @@ async def github_webhook(request: Request, background_tasks: BackgroundTasks, x_
             "changed_files": diff_data['diff_files']
         }
     except Exception as e:
+        print(f"ERROR in webhook: {e}")
+        import traceback
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
