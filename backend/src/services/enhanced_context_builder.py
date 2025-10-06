@@ -96,11 +96,13 @@ class EnhancedContextBuilder:
                 # Finding imports used by this function
                 func_imports = []
                 for imp in imports:
-                    if imp["module"] in func["complete_code"]:
-                        func_imports.append(imp["module"])
+                    if imp["module"] not in func["complete_code"]:
+                        func_imports.append(imp["complete_code"])
 
                 # Getting dependencies for this function
-                func_deps = dependencies["function_dependencies"].get(func["name"], [])
+                func_deps = dependencies["function_dependencies"].fetch(
+                    func["name"], []
+                )
 
                 markdown += f"""#### {func['name']} (line {func['line']})
 
