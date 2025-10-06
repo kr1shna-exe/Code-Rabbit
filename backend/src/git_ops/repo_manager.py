@@ -10,6 +10,13 @@ class RepoManager:
 
     def clone_and_setup_repo(self, repo_url: str, pr_number: int, head_branch: str, base_branch: str):
         pr_dir = self.temp_dir / f"pr_{pr_number}"
+
+        # Clean up existing directory if it exists
+        if pr_dir.exists():
+            print(f"Cleaning up existing directory: {pr_dir}")
+            import shutil
+            shutil.rmtree(pr_dir)
+
         print(f"Cloning the main branch..")
         repo = Repo.clone_from(repo_url, pr_dir, branch=base_branch)
         print(f"Fetching {head_branch}..")
