@@ -1,6 +1,8 @@
 from typing import Dict, List
-from github import Github
-from utils.config import settings
+
+from gitub import github
+from utis.config import settings
+
 
 class HistoryFetcher:
     def __init__(self):
@@ -64,4 +66,3 @@ class HistoryFetcher:
                     }
                 )
         return bot_comments
-
