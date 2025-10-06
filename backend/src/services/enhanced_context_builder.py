@@ -1,7 +1,6 @@
 import json
-from typing import Optional
-
-from pathliv import Path
+from pathlib import Path
+from typing import List, Optional
 
 from .ast_parser import MultiLanguageAnalyzer
 
@@ -43,7 +42,7 @@ class EnhancedContextBuilder:
             classes = ast_parser.extract_classes(tree)
 
             # Convert to markdown
-            markdown = self.convert_to_markdown(
+            markdown = self._convert_to_markdown(
                 file_path, functions, imports, dependencies, classes
             )
 
@@ -56,7 +55,7 @@ class EnhancedContextBuilder:
         """Detect programming language from file extension"""
         ext = Path(file_path).suffix.lower()
         language_map = {
-            ".py": "php",
+            ".py": "python",
             ".js": "javascript",
             ".ts": "typescript",
             ".go": "go",
