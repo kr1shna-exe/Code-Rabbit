@@ -5,6 +5,8 @@ from utils.config import settings
 from git_ops.repo_manager import RepoManager
 from ai.code_reviewer import review_code
 from utils.github_bot import GitHubBot
+from services.history_fetcher import HistoryFetcher
+from services.enhanced_context_builder import EnhancedContextBuilder
 
 router = APIRouter()
 repo_manager = RepoManager(settings.temp_repo_dir)
@@ -59,11 +61,71 @@ async def github_webhook(request: Request, background_tasks: BackgroundTasks, x_
         )
         print(f"Diff generated successfully: {diff_data}")
         print(f"Total files changed: {len(diff_data['diff_files'])}")
-        print(f"Getting AI to review the code changes...")
+
+        # Log raw diff data for inspection
+        print("=" * 50)
+        print("🔄 RAW DIFF DATA FETCHED:")
+        print("=" * 50)
+        print(f"PR Title: {diff_data.get('pr_title', 'N/A')}")
+        print(f"PR Description: {diff_data.get('pr_description', 'N/A')[:100]}...")
+        print(f"Full diff length: {len(diff_data.get('full_diff', '')):,} characters")
+        print(f"Changed files: {diff_data.get('diff_files', [])}")
+        print("=" * 50)
+        # Fetch PR history first
+        print("Fetching PR history...")
+        history_fetcher = HistoryFetcher()
+        pr_history = history_fetcher.fetch_pr_context(repo_full_name, pr_number)
+
+        # Log raw PR history for inspection
+        print("=" * 50)
+        print("📚 RAW PR HISTORY FETCHED:")
+        print("=" * 50)
+        print(f"Commits: {len(pr_history.get('commits', []))}")
+        print(f"Comments: {len(pr_history.get('all_comments', []))}")
+        print("Sample commit:", pr_history.get('commits', [{}])[0] if pr_history.get('commits') else {})
+        print("=" * 50)
+
+        print("Building enhanced AI context with AST parser...")
+
+        # Add PR metadata to diff_data
+        diff_data['pr_title'] = pr_title
+        diff_data['pr_description'] = pr.get('body', '')
+
+        # Initialize enhanced context builder
+        context_builder = EnhancedContextBuilder()
+
+        # Build comprehensive context (diff + history + AST analysis)
+        comprehensive_context = context_builder.build_comprehensive_ai_context(
+            diff_data=diff_data,
+            pr_history=pr_history,
+            repo_path=repo_path
+        )
+
+        print(f"Generated enhanced context length: {len(comprehensive_context)} characters")
+
+        # Save complete context to file for inspection
+        import datetime
+        timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+        context_file = f"ai_context_{pr_number}_{timestamp}.md"
+
+        with open(context_file, 'w', encoding='utf-8') as f:
+            f.write(comprehensive_context)
+        print(f"💾 Complete context saved to: {context_file}")
+
+        # Log complete context for inspection (optional - comment out if too verbose)
+        print("=" * 80)
+        print("📋 COMPLETE ENHANCED CONTEXT SENT TO AI:")
+        print("=" * 80)
+        print(comprehensive_context)
+        print("=" * 80)
+        print(f"📏 Context length: {len(comprehensive_context):,} characters")
+        print("=" * 80)
+
+        print(f"Getting AI to review with enhanced context...")
         ai_review = review_code(
             diff = diff_data['full_diff'],
             pr_title = pr_title,
-            files_changed = diff_data['diff_files']
+            context = comprehensive_context
         )
         print(f"AI review completed: {ai_review}")
         github_bot = GitHubBot(installation_id=installation_id)

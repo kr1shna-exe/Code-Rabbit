@@ -1,21 +1,51 @@
 import google.generativeai as genai
-from src.utils.config import settings
-from src.services.ast_parser import ASTAnalyzer
+from utils.config import settings
 genai.configure(api_key=settings.gemini_api_key)
 
-def review_code(diff: str, pr_title: str, files_changed: list):
-    prompt = f"""You are an expert code reviewer.Review this pull request and provide feedback.
-**Pull Request: {pr_title}**
-**Files Changed: {', '.join(files_changed)}**
-**Code Changes: {diff}**
-Please provide:
-1. Summary of changes
-2. Any bugs or issues you find
-3. Code quality suggestions
-4. Security concerns (if any)
-5. Overall assessment
+def review_code(diff: str, pr_title: str, context: str):
+    prompt = f"""You are CodeRabbit, an expert AI code reviewer with deep codebase knowledge.
 
-Keep it clear and actionable."""
+**Pull Request: {pr_title}**
+
+{context}
+
+**Code Changes:**
+{diff}
+
+**Review Guidelines:**
+1. Analyze changes considering complexity, dependencies, and cross-file impact
+2. Check if modified functions will break their callers
+3. Compare against similar patterns in the codebase
+4. Flag potential bugs, security issues, and performance problems
+5. Suggest specific improvements with code examples
+6. Verify import/dependency changes are safe
+
+**Format your response with these sections:**
+
+## 🔴 Potential Issues Found
+- Critical bugs and errors that must be fixed
+- Security vulnerabilities
+- Breaking changes
+- Performance bottlenecks
+
+## 🛠️ Fixes
+- Specific code fixes for identified issues
+- Refactoring suggestions
+- Best practice implementations
+
+## 🔒 Security Implications
+- Security concerns and vulnerabilities
+- Input validation issues
+- Authentication/authorization problems
+- Data exposure risks
+
+## ✅ Positive Aspects
+- Good practices and patterns
+- Well-implemented features
+- Clean code examples
+
+Be specific, actionable, and reference line numbers where applicable.
+"""
 
     model = genai.GenerativeModel('gemini-2.0-flash-exp')
     response = model.generate_content(prompt)
