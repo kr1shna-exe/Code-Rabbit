@@ -306,7 +306,7 @@ Focus on the changed functions and their dependencies. Consider the PR history t
 
         for file_path in files_to_analyze:
             ast_context = self.create_ast_markdown_context(file_path, repo_path)
-            if ast_context and not ast_context.startswith(""):
+            if ast_context and not ast_context.startswith("File not found") and not ast_context.startswith("AST analysis failed"):
                 context += ast_context + "\n"
                 analyzed_files += 1
 
