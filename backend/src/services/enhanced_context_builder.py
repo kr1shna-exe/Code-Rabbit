@@ -1,4 +1,3 @@
-import json
 from pathlib import Path
 from typing import List
 
@@ -12,7 +11,7 @@ class EnhancedContextBuilder:
     """
 
     def __init__(self):
-        pass
+        passs
 
     def create_ast_markdown_context(self, file_path: str, repo_path: str) -> str:
         """
