@@ -1,8 +1,10 @@
 import json
-from datetime import datetime
-from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Optional
+
+from pathliv import Path
+
 from .ast_parser import MultiLanguageAnalyzer
+
 
 class EnhancedContextBuilder:
     """
@@ -16,7 +18,7 @@ class EnhancedContextBuilder:
     def create_ast_markdown_context(self, file_path: str, repo_path: str) -> str:
         """
         Creating markdown context from AST parser for a specific file
-        """        
+        """
         language = self._detect_language(file_path)
         if not language:
             return ""
@@ -41,7 +43,7 @@ class EnhancedContextBuilder:
             classes = ast_parser.extract_classes(tree)
 
             # Convert to markdown
-            markdown = self._convert_to_markdown(
+            markdown = self.convert_to_markdown(
                 file_path, functions, imports, dependencies, classes
             )
 
@@ -54,7 +56,7 @@ class EnhancedContextBuilder:
         """Detect programming language from file extension"""
         ext = Path(file_path).suffix.lower()
         language_map = {
-            ".py": "python",
+            ".py": "php",
             ".js": "javascript",
             ".ts": "typescript",
             ".go": "go",
@@ -166,7 +168,7 @@ class EnhancedContextBuilder:
             context_parts.append(self._format_pr_history(pr_history))
 
             # Code Changes (Diff)
-            context_parts.append(self._format_code_changes(diff_data))
+            context_parts.append(self.format_code_changes(diff_data))
 
             # AST Analysis for changed files
             context_parts.append(
@@ -246,7 +248,7 @@ Focus on the changed functions and their dependencies. Consider the PR history t
 
 """
 
-        # Bot comments 
+        # Bot comments
         bot_comments = pr_history.get("all_comments", [])
         if bot_comments:
             context += "### Previous AI Suggestions\n\n"
@@ -314,4 +316,3 @@ Focus on the changed functions and their dependencies. Consider the PR history t
             context += "*No supported files found for AST analysis*\n\n"
 
         return context
-
