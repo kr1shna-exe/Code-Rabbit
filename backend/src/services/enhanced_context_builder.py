@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import List
+from typing import Dict, List, Optional
 
 from .ast_parser import MultiLanguageAnalyzer
 
@@ -11,7 +11,7 @@ class EnhancedContextBuilder:
     """
 
     def __init__(self):
-        passs
+        pass
 
     def create_ast_markdown_context(self, file_path: str, repo_path: str) -> str:
         """
