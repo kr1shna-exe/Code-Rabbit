@@ -64,7 +64,7 @@ async def github_webhook(request: Request, background_tasks: BackgroundTasks, x_
 
         # Log raw diff data for inspection
         print("=" * 50)
-        print("🔄 RAW DIFF DATA FETCHED:")
+        print("RAW DIFF DATA FETCHED:")
         print("=" * 50)
         print(f"PR Title: {diff_data.get('pr_title', 'N/A')}")
         print(f"PR Description: {diff_data.get('pr_description', 'N/A')[:100]}...")
@@ -78,7 +78,7 @@ async def github_webhook(request: Request, background_tasks: BackgroundTasks, x_
 
         # Log raw PR history for inspection
         print("=" * 50)
-        print("📚 RAW PR HISTORY FETCHED:")
+        print("RAW PR HISTORY FETCHED:")
         print("=" * 50)
         print(f"Commits: {len(pr_history.get('commits', []))}")
         print(f"Comments: {len(pr_history.get('all_comments', []))}")
@@ -110,15 +110,15 @@ async def github_webhook(request: Request, background_tasks: BackgroundTasks, x_
 
         with open(context_file, 'w', encoding='utf-8') as f:
             f.write(comprehensive_context)
-        print(f"💾 Complete context saved to: {context_file}")
+        print(f"Complete context saved to: {context_file}")
 
         # Log complete context for inspection (optional - comment out if too verbose)
         print("=" * 80)
-        print("📋 COMPLETE ENHANCED CONTEXT SENT TO AI:")
+        print("COMPLETE ENHANCED CONTEXT SENT TO AI:")
         print("=" * 80)
         print(comprehensive_context)
         print("=" * 80)
-        print(f"📏 Context length: {len(comprehensive_context):,} characters")
+        print(f"Context length: {len(comprehensive_context):,} characters")
         print("=" * 80)
 
         print(f"Getting AI to review with enhanced context...")

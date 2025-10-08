@@ -6,7 +6,7 @@ import tree_sitter_typescript as tsts
 from tree_sitter import Language, Parser, Query, QueryCursor
 import re
 from typing import Dict, List, Optional, Any
-from .semantic_graph_builder import SemanticGraphBuilder
+from .semantics import analyze_semantics
 
 class MultiLanguageAnalyzer:
     LANGUAGES = {
@@ -375,18 +375,25 @@ class MultiLanguageAnalyzer:
         Enhanced analysis using semantic graphs (combining our approach with friend's approach)
         """
         try:
-            # Create semantic graph builder
-            graph_builder = SemanticGraphBuilder(self.lang_name)
+            # Use the new semantics module for analysis
+            semantic_analysis = analyze_semantics(source_code, file_path)
 
-            # Build semantic graph
-            semantic_graph = graph_builder.build_semantic_graph(
-                tree,
-                source_code.encode('utf-8'),
-                file_path
-            )
-
-            # Get analysis from semantic graph
-            semantic_analysis = graph_builder.to_analysis_dict()
+            # Extract semantic graph from the analysis
+            if semantic_analysis.get("analysis_type") == "semantic":
+                semantic_graph = semantic_analysis.get("semantic_graph", {})
+            else:
+                semantic_graph = {
+                    "nodes": [],
+                    "edges": [],
+                    "node_metadata": {},
+                    "graph_stats": {
+                        "total_nodes": 0,
+                        "total_edges": 0,
+                        "functions": 0,
+                        "classes": 0,
+                        "imports": 0
+                    }
+                }
 
             # Enhance with our existing detailed function extraction
             our_functions = self.extract_functions(tree, source_code)
@@ -400,20 +407,22 @@ class MultiLanguageAnalyzer:
                 "detailed_imports": our_imports,
                 "detailed_classes": our_classes,
 
-                # Friend's semantic graph analysis (relationships)
-                "semantic_functions": semantic_analysis["functions"],
-                "semantic_imports": semantic_analysis["imports"],
-                "semantic_classes": semantic_analysis["classes"],
-                "function_dependencies": semantic_analysis["dependencies"],
-                "import_usage": semantic_analysis["import_usage"],
+                # Semantic analysis from new semantics module
+                "function_dependencies": self._extract_function_dependencies(semantic_analysis),
+                "import_usage": self._extract_import_usage(semantic_analysis),
 
-                # Graph statistics
-                "graph_stats": semantic_analysis["graph_stats"],
+                # Graph statistics from semantic graph
+                "graph_stats": semantic_graph.get("graph_stats", {}),
+
+                # Additional semantic insights
+                "semantic_insights": semantic_analysis.get("semantic_insights", []),
+                "security_patterns": semantic_analysis.get("security_patterns", []),
+                "function_complexity": semantic_analysis.get("function_complexity", {}),
 
                 # Metadata
                 "file_path": file_path,
                 "language": self.lang_name,
-                "analysis_method": "hybrid_detailed_semantic"
+                "analysis_method": "enhanced_semantic"
             }
 
             return enhanced_analysis
@@ -428,3 +437,35 @@ class MultiLanguageAnalyzer:
                 "function_dependencies": self.extract_dependencies(tree, source_code)["function_dependencies"],
                 "analysis_method": "fallback_basic"
             }
+
+    def _extract_function_dependencies(self, semantic_analysis: Dict[str, Any]) -> Dict[str, List[str]]:
+        """Extract function dependencies from semantic analysis"""
+        function_dependencies = {}
+
+        if semantic_analysis.get("analysis_type") == "semantic":
+            semantic_edges = semantic_analysis.get("semantic_edges", [])
+
+            for edge in semantic_edges:
+                if edge.get("relationship") == "calls":
+                    source = edge.get("source", "")
+                    target = edge.get("target", "")
+
+                    # Extract function names from IDs
+                    if source.startswith("func_") and target.startswith("func_"):
+                        source_func = source.replace("func_", "").split("_")[0]
+                        target_func = target.replace("func_", "").split("_")[0]
+
+                        if source_func not in function_dependencies:
+                            function_dependencies[source_func] = []
+                        function_dependencies[source_func].append(target_func)
+
+        return function_dependencies
+
+    def _extract_import_usage(self, semantic_analysis: Dict[str, Any]) -> Dict[str, List[str]]:
+        """Extract import usage from semantic analysis"""
+        import_usage = {}
+
+        # For now, return empty dict - this would need more sophisticated tracking
+        # in a real implementation to map which functions use which imports
+
+        return import_usage
