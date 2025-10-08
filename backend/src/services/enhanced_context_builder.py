@@ -2,7 +2,9 @@ import json
 from datetime import datetime
 from pathlib import Path
 from typing import Dict, List, Optional
+
 from .ast_parser import MultiLanguageAnalyzer
+
 
 class EnhancedContextBuilder:
     """
@@ -16,14 +18,14 @@ class EnhancedContextBuilder:
     def create_ast_markdown_context(self, file_path: str, repo_path: str) -> str:
         """
         Creating markdown context from AST parser for a specific file
-        """        
+        """
         language = self._detect_language(file_path)
         if not language:
             return ""
 
         try:
             # Initializing AST parser for this language
-            ast_parser = MultiLanguageAnalyzer(language)
+            ast_parser = MultiLanguageAnalyzer(languag)
 
             # Read and analyze the file
             full_path = Path(repo_path) / file_path
@@ -37,7 +39,9 @@ class EnhancedContextBuilder:
             tree = ast_parser.parse_code(code)
 
             # Use enhanced semantic analysis (combining both approaches)
-            semantic_analysis = ast_parser.extract_semantic_analysis(tree, code, file_path)
+            semantic_analysis = ast_parser.extract_semantic_analysis(
+                tree, code, file_path
+            )
 
             # For backward compatibility, extract individual components
             functions = semantic_analysis.get("detailed_functions", [])
@@ -46,16 +50,14 @@ class EnhancedContextBuilder:
             classes = semantic_analysis.get("detailed_classes", [])
 
             # Convert to enhanced markdown with semantic information
-            markdown = self._convert_to_enhanced_markdown(
-                file_path, semantic_analysis
-            )
+            markdown = self._convert_to_enhanced_markdown(file_path, semantic_analysis)
 
             return markdown
 
         except Exception as e:
             return f"AST analysis failed for {file_path}: {str(e)}"
 
-    def _detect_language(self, file_path: str) -> Optional[str]:
+    def _detect_language(self, file_path: str) -> [str]:
         """Detect programming language from file extension"""
         ext = Path(file_path).suffix.lower()
         language_map = {
@@ -67,8 +69,9 @@ class EnhancedContextBuilder:
         }
         return language_map.get(ext)
 
-    
-    def _convert_to_enhanced_markdown(self, file_path: str, semantic_analysis: Dict) -> str:
+    def _convert_to_enhanced_markdown(
+        self, file_path: str, semantic_analysis: Dict
+    ) -> str:
         """Convert enhanced semantic analysis to markdown format with graph information"""
 
         # Extract components from semantic analysis
@@ -106,8 +109,8 @@ class EnhancedContextBuilder:
         if detailed_functions:
             markdown += "### Functions with Complete Code & Semantic Analysis\n\n"
 
-            for func in detailed_functions:
-                func_name = func["name"]
+            for func in detailed_function:
+                func_name = func["function_name"]
 
                 # Enhanced import usage from semantic analysis
                 func_imports = import_usage.get(func_name, [])
@@ -273,7 +276,7 @@ Focus on the changed functions and their dependencies. Consider the PR history t
 
 """
 
-        # Bot comments 
+        # Bot comments
         bot_comments = pr_history.get("all_comments", [])
         if bot_comments:
             context += "### Previous AI Suggestions\n\n"
@@ -333,7 +336,11 @@ Focus on the changed functions and their dependencies. Consider the PR history t
 
         for file_path in files_to_analyze:
             ast_context = self.create_ast_markdown_context(file_path, repo_path)
-            if ast_context and not ast_context.startswith("File not found") and not ast_context.startswith("AST analysis failed"):
+            if (
+                ast_context
+                and not ast_context.startswith("File not found")
+                and not ast_context.startswith("AST analysis failed")
+            ):
                 context += ast_context + "\n"
                 analyzed_files += 1
 
@@ -341,4 +348,3 @@ Focus on the changed functions and their dependencies. Consider the PR history t
             context += "*No supported files found for AST analysis*\n\n"
 
         return context
-
