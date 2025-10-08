@@ -78,9 +78,6 @@ class EnhancedContextBuilder:
         graph_stats = semantic_analysis.get("graph_stats", {})
         analysis_method = semantic_analysis.get("analysis_method", "unknown")
 
-        markdown = f"""## Enhanced File Analysis: `{file_path}`
-
-### Analysis Summary
 - **Analysis Method**: {analysis_method}
 - **Functions**: {len(detailed_functions)}
 - **Classes**: {len(detailed_classes)}
