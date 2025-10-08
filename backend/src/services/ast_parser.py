@@ -1,12 +1,14 @@
+from typing import Any, Dict, List, Optional
+
 import tree_sitter_go as tsgo
 import tree_sitter_javascript as tsjs
 import tree_sitter_python as tspython
 import tree_sitter_rust as tsrust
 import tree_sitter_typescript as tsts
 from tree_sitter import Language, Parser, Query, QueryCursor
-import re
-from typing import Dict, List, Optional, Any
-from .semantic_graph_builder import SemanticGraphBuilder
+
+from .semanticgraph_builder import SemanticGraphBuilder
+
 
 class MultiLanguageAnalyzer:
     LANGUAGES = {
@@ -53,7 +55,7 @@ class MultiLanguageAnalyzer:
             """,
             "go": "",
             "rust": """
-                (struct_item
+                (struc=t_item
                     name: (type_identifier) @class.name
                 )
                 (impl_item
@@ -75,7 +77,7 @@ class MultiLanguageAnalyzer:
             captures = cursor.captures(tree.root_node)
 
             classes = []
-            for capture_name, nodes in captures.items():
+            for capture_iname, nodes in captures.items():
                 if "class.name" in capture_name:
                     for node in nodes:
                         classes.append(
@@ -327,7 +329,11 @@ class MultiLanguageAnalyzer:
         For enhanced analysis with AST-accurate relationships, use extract_semantic_analysis().
         """
         if not code:
-            return {"internal_calls": [], "external_imports": [], "function_dependencies": {}}
+            return {
+                "internal_calls": [],
+                "external_imports": [],
+                "function_dependencies": {},
+            }
 
         functions = self.extract_functions(tree, code)
         imports = self.extract_imports(tree)
@@ -345,11 +351,13 @@ class MultiLanguageAnalyzer:
                 if other_func["name"] != func_name:
                     pattern = r"\b" + re.escape(other_func["name"]) + r"\s*\("
                     if re.search(pattern, func_code):
-                        internal_calls.append({
-                            "caller": func_name,
-                            "callee": other_func["name"],
-                            "line": func["line"],
-                        })
+                        internal_calls.append(
+                            {
+                                "caller": func_name,
+                                "callee": other_func["name"],
+                                "line": func["line"],
+                            }
+                        )
 
             # Basic import usage detection (text-based)
             for imp in imports:
@@ -370,7 +378,9 @@ class MultiLanguageAnalyzer:
             },
         }
 
-    def extract_semantic_analysis(self, tree, source_code: str, file_path: str) -> Dict[str, Any]:
+    def extract_semantic_analysis(
+        self, tree, source_code: str, file_path: str
+    ) -> Dict[str, Any]:
         """
         Enhanced analysis using semantic graphs (combining our approach with friend's approach)
         """
@@ -380,9 +390,7 @@ class MultiLanguageAnalyzer:
 
             # Build semantic graph
             semantic_graph = graph_builder.build_semantic_graph(
-                tree,
-                source_code.encode('utf-8'),
-                file_path
+                tree, source_code.encode("utf-8"), file_path
             )
 
             # Get analysis from semantic graph
@@ -399,32 +407,33 @@ class MultiLanguageAnalyzer:
                 "detailed_functions": our_functions,
                 "detailed_imports": our_imports,
                 "detailed_classes": our_classes,
-
                 # Friend's semantic graph analysis (relationships)
                 "semantic_functions": semantic_analysis["functions"],
                 "semantic_imports": semantic_analysis["imports"],
                 "semantic_classes": semantic_analysis["classes"],
                 "function_dependencies": semantic_analysis["dependencies"],
                 "import_usage": semantic_analysis["import_usage"],
-
                 # Graph statistics
                 "graph_stats": semantic_analysis["graph_stats"],
-
                 # Metadata
                 "file_path": file_path,
                 "language": self.lang_name,
-                "analysis_method": "hybrid_detailed_semantic"
+                "analysis_method": "hybrid_detailed_semantic",
             }
 
             return enhanced_analysis
 
         except Exception as e:
-            print(f"Warning: Semantic analysis failed, falling back to basic extraction: {e}")
+            print(
+                f"Warning: Semantic analysis failed, falling back to basic extraction: {e}"
+            )
             # Fallback to our existing methods
             return {
                 "detailed_functions": self.extract_functions(tree, source_code),
                 "detailed_imports": self.extract_imports(tree),
                 "detailed_classes": self.extract_classes(tree),
-                "function_dependencies": self.extract_dependencies(tree, source_code)["function_dependencies"],
-                "analysis_method": "fallback_basic"
+                "function_dependencies": self.extract_dependencies(tree, source_code)[
+                    "function_dependencies"
+                ],
+                "analysis_method": "fallback_basic",
             }
