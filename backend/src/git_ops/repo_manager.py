@@ -1,26 +1,30 @@
-import os, shutil
 from pathlib import Path
+from typing import Dict, List
+
 from git import Repo
-from typing import Dict,List
+
 
 class RepoManager:
     def __init__(self, temp_dir: str):
         self.temp_dir = Path(temp_dir)
         self.temp_dir.mkdir(exist_ok=True)
 
-    def clone_and_setup_repo(self, repo_url: str, pr_number: int, head_branch: str, base_branch: str):
+    def clone_and_setup_repo(
+        self, repo_url: str, pr_number: int, head_branch: str, base_branch: str
+    ):
         pr_dir = self.temp_dir / f"pr_{pr_number}"
 
         # Clean up existing directory if it exists
         if pr_dir.exists():
             print(f"Cleaning up existing directory: {pr_dir}")
             import shutil
+
             shutil.rmtree(pr_dir)
 
         print(f"Cloning the main branch..")
         repo = Repo.clone_from(repo_url, pr_dir, branch=base_branch)
         print(f"Fetching {head_branch}..")
-        origin = repo.remote('origin')
+        origin = repo.remote("origin")
         origin.fetch(head_branch)
         repo.git.checkout(f"origin/{head_branch}")
         return pr_dir
@@ -32,26 +36,20 @@ class RepoManager:
 
         repo = Repo(repo_path)
         diff = repo.git.diff(f"origin/{base_branch}...origin/{head_branch }")
-        diff_files = repo.git.diff(f"origin/{base_branch}...origin/{head_branch}", name_only=True).split('\n')
+        diff_files = repo.git.diff(
+            f"origin/{base_branch}...origin/{head_branch}", name_only=True
+        ).split("\n")
 
         # Normalize file paths to match actual repository structure
         normalized_files = []
-        for file_path in diff_files:
-            if not file_path:
-                continue
-
-            # Check if the file exists at the given path
-            full_path = repo_path / file_path
-            if full_path.exists():
-                normalized_files.append(file_path)
             else:
                 # Try to find the file by removing common prefixes
                 # This handles cases where git diff returns paths like 'backend/src/file.py'
                 # but the cloned repo structure is just 'src/file.py'
                 possible_path = file_path
-                while '/' in possible_path:
+                while "/" in possible_path:
                     # Remove the first directory component and try again
-                    possible_path = possible_path.split('/', 1)[1]
+                    possible_path = possible_path.split("/", 1)[1]
                     if (repo_path / possible_path).exists():
                         normalized_files.append(possible_path)
                         break
@@ -59,10 +57,7 @@ class RepoManager:
                     # If we can't find the file, keep the original path for error reporting
                     normalized_files.append(file_path)
 
-        return {
-            "full_diff": diff,
-            "diff_files": normalized_files
-        }
+        return {"full_diff": diff, "diff_files": normalized_files}
 
     def get_file_content(self, repo_path: Path, branch: str, file_path: str):
         repo = Repo(repo_path)
@@ -71,3 +66,4 @@ class RepoManager:
     def clean_up(self, repo_path: str):
         if repo_path.exists():
             shutil.rmtree(repo_path)
+
