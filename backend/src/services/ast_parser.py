@@ -1,9 +1,10 @@
 from typing import Any, Dict, List, Optional
 
+import as
 import tree_sitter_go as tsgo
 import tree_sitter_javascript as tsjs
 import tree_sitter_python as tspython
-import tree_sitter_rust as tsrust
+import tree_sitter_rust
 import tree_sitter_typescript as tsts
 from tree_sitter import Language, Parser, Query, QueryCursor
 
@@ -55,7 +56,7 @@ class MultiLanguageAnalyzer:
             """,
             "go": "",
             "rust": """
-                (struc=t_item
+                (struct_item
                     name: (type_identifier) @class.name
                 )
                 (impl_item
@@ -77,7 +78,7 @@ class MultiLanguageAnalyzer:
             captures = cursor.captures(tree.root_node)
 
             classes = []
-            for capture_iname, nodes in captures.items():
+            for captur_iname, nodes in captures.items():
                 if "class.name" in capture_name:
                     for node in nodes:
                         classes.append(
