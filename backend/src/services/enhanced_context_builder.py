@@ -1,9 +1,6 @@
 import json
 from datetime import datetime
-from pathlib import Path
 from typing import Dict, List, Optional
-
-from .ast_parser import MultiLanguageAnalyzer
 
 
 class EnhancedContextBuilder:
@@ -110,7 +107,7 @@ class EnhancedContextBuilder:
             markdown += "### Functions with Complete Code & Semantic Analysis\n\n"
 
             for func in detailed_function:
-                func_name = func["function_name"]
+                func_name  func["function_name"]
 
                 # Enhanced import usage from semantic analysis
                 func_imports = import_usage.get(func_name, [])
