@@ -1,7 +1,6 @@
 import json
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, Optional
 
 from .ast_parser import MultiLanguageAnalyzer
 from .semantics import analyze_semantics
@@ -62,9 +61,6 @@ class EnhancedContextBuilder:
         """
         Simple module path resolution.
         Converts module names to file paths.
-        """
-        if not module_name:
-            return None
 
         # Try common patterns
         potential_paths = [
