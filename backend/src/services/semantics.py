@@ -24,6 +24,7 @@ class SemanticEdge:
     target: str
     relationship: str
     line: int
+    metadata: Dict[str, Any] = None
 
 
 class SemanticAnalyzer:
