@@ -35,14 +35,19 @@ class EnhancedContextBuilder:
 
             # Parsing and extracting information
             tree = ast_parser.parse_code(code)
-            functions = ast_parser.extract_functions(tree, code)
-            imports = ast_parser.extract_imports(tree)
-            dependencies = ast_parser.extract_dependencies(tree, code)
-            classes = ast_parser.extract_classes(tree)
 
-            # Convert to markdown
-            markdown = self._convert_to_markdown(
-                file_path, functions, imports, dependencies, classes
+            # Use enhanced semantic analysis (combining both approaches)
+            semantic_analysis = ast_parser.extract_semantic_analysis(tree, code, file_path)
+
+            # For backward compatibility, extract individual components
+            functions = semantic_analysis.get("detailed_functions", [])
+            imports = semantic_analysis.get("detailed_imports", [])
+            dependencies = semantic_analysis.get("function_dependencies", {})
+            classes = semantic_analysis.get("detailed_classes", [])
+
+            # Convert to enhanced markdown with semantic information
+            markdown = self._convert_to_enhanced_markdown(
+                file_path, semantic_analysis
             )
 
             return markdown
@@ -62,44 +67,53 @@ class EnhancedContextBuilder:
         }
         return language_map.get(ext)
 
-    def _convert_to_markdown(
-        self,
-        file_path: str,
-        functions: List[Dict],
-        imports: List[Dict],
-        dependencies: Dict,
-        classes: List[Dict],
-    ) -> str:
-        """Convert AST analysis to markdown format"""
+    
+    def _convert_to_enhanced_markdown(self, file_path: str, semantic_analysis: Dict) -> str:
+        """Convert enhanced semantic analysis to markdown format with graph information"""
 
-        markdown = f"""## File Analysis: `{file_path}`
+        # Extract components from semantic analysis
+        detailed_functions = semantic_analysis.get("detailed_functions", [])
+        detailed_imports = semantic_analysis.get("detailed_imports", [])
+        detailed_classes = semantic_analysis.get("detailed_classes", [])
+        function_dependencies = semantic_analysis.get("function_dependencies", {})
+        import_usage = semantic_analysis.get("import_usage", {})
+        graph_stats = semantic_analysis.get("graph_stats", {})
+        analysis_method = semantic_analysis.get("analysis_method", "unknown")
 
-### Summary
-- **Functions**: {len(functions)}
-- **Classes**: {len(classes)}
-- **Imports**: {len(imports)}
-- **Dependencies**: {len(dependencies['internal_calls'])}
+        markdown = f"""## Enhanced File Analysis: `{file_path}`
+
+### Analysis Summary
+- **Analysis Method**: {analysis_method}
+- **Functions**: {len(detailed_functions)}
+- **Classes**: {len(detailed_classes)}
+- **Imports**: {len(detailed_imports)}
+- **Semantic Graph Nodes**: {graph_stats.get('nodes', 0)}
+- **Semantic Graph Edges**: {graph_stats.get('edges', 0)}
+
+### Graph Statistics
+- **Functions in Graph**: {graph_stats.get('functions', 0)}
+- **Classes in Graph**: {graph_stats.get('classes', 0)}
+- **Imports in Graph**: {graph_stats.get('imports', 0)}
 
 """
-        if classes:
+        if detailed_classes:
             markdown += "### Classes\n\n"
-            for cls in classes:
+            for cls in detailed_classes:
                 markdown += f"- **{cls['name']}** (line {cls['line']})\n"
             markdown += "\n"
 
-        # Add functions with complete code
-        if functions:
-            markdown += "### Functions with Complete Code\n\n"
+        # Add functions with complete code and enhanced semantic info
+        if detailed_functions:
+            markdown += "### Functions with Complete Code & Semantic Analysis\n\n"
 
-            for func in functions:
-                # Finding imports used by this function
-                func_imports = []
-                for imp in imports:
-                    if imp["module"] in func["complete_code"]:
-                        func_imports.append(imp["module"])
+            for func in detailed_functions:
+                func_name = func["name"]
 
-                # Getting dependencies for this function
-                func_deps = dependencies["function_dependencies"].get(func["name"], [])
+                # Enhanced import usage from semantic analysis
+                func_imports = import_usage.get(func_name, [])
+
+                # Enhanced dependencies from semantic analysis
+                func_deps = function_dependencies.get(func_name, [])
 
                 markdown += f"""#### {func['name']} (line {func['line']})
 
@@ -110,24 +124,37 @@ class EnhancedContextBuilder:
 {func['complete_code']}
 ```
 
-**Dependencies:** {', '.join(func_deps) if func_deps else 'None'}
-**Imports Used:** {', '.join(func_imports) if func_imports else 'None'}
+**📊 Semantic Analysis:**
+- **Function Calls**: {', '.join(func_deps) if func_deps else 'None'}
+- **Imports Used**: {', '.join(func_imports) if func_imports else 'None'}
+- **Code Lines**: {func.get('code_lines', 'N/A')}
 
 ---
-
 """
 
-        # Adding dependency graph
-        if dependencies["internal_calls"]:
-            markdown += "### Function Dependencies\n\n"
-            for call in dependencies["internal_calls"]:
-                markdown += f"- **{call['caller']}()** → **{call['callee']}()** (line {call['line']})\n"
+        # Enhanced dependency graph with semantic information
+        if function_dependencies:
+            markdown += "### Enhanced Function Dependencies (from Semantic Graph)\n\n"
+            for caller, callees in function_dependencies.items():
+                if callees:
+                    for callee in callees:
+                        markdown += f"- **{caller}()** → **{callee}()**\n"
+                else:
+                    markdown += f"- **{caller}()** (no internal calls)\n"
             markdown += "\n"
 
-        # Adding imports
-        if imports:
-            markdown += "### Imports Used\n\n"
-            for imp in imports:
+        # Enhanced import usage analysis
+        if import_usage:
+            markdown += "### Import Usage Analysis (from Semantic Graph)\n\n"
+            for func_name, imports_used in import_usage.items():
+                if imports_used:
+                    markdown += f"- **{func_name}()** uses: {', '.join(imports_used)}\n"
+            markdown += "\n"
+
+        # Adding imports with enhanced information
+        if detailed_imports:
+            markdown += "### All Imports Used\n\n"
+            for imp in detailed_imports:
                 markdown += f"- **{imp['module']}** ({imp['type']} import, line {imp['line']})\n"
             markdown += "\n"
 
@@ -285,7 +312,7 @@ Focus on the changed functions and their dependencies. Consider the PR history t
     ) -> str:
         """Build AST analysis markdown for all changed files"""
 
-        context = "## Enhanced Code Analysis (AST Parser)\n\n"
+        context = "## Enhanced Code Analysis (Semantic Graph + Detailed AST)\n\n"
 
         diff_files = diff_data.get("diff_files", [])
         analyzed_files = 0

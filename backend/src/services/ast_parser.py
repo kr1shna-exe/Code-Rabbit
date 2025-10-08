@@ -5,6 +5,8 @@ import tree_sitter_rust as tsrust
 import tree_sitter_typescript as tsts
 from tree_sitter import Language, Parser, Query, QueryCursor
 import re
+from typing import Dict, List, Optional, Any
+from .semantic_graph_builder import SemanticGraphBuilder
 
 class MultiLanguageAnalyzer:
     LANGUAGES = {
@@ -317,74 +319,43 @@ class MultiLanguageAnalyzer:
             return []
 
     def extract_dependencies(self, tree, code: str = None):
-        """Extract the function's dependencies and import usage"""
+        """
+        DEPRECATED: Use extract_semantic_analysis() for better dependency analysis.
+        This method is kept for backward compatibility but semantic graphs provide more accurate results.
+
+        Returns basic dependency analysis using regex patterns.
+        For enhanced analysis with AST-accurate relationships, use extract_semantic_analysis().
+        """
         if not code:
-            return {"internal_calls": [], "external_imports": []}
+            return {"internal_calls": [], "external_imports": [], "function_dependencies": {}}
 
         functions = self.extract_functions(tree, code)
         imports = self.extract_imports(tree)
 
-        # Extracting import usage patterns
-        import_patterns = {
-            "python": [
-                r"import\s+(\w+)",
-                r"from\s+(\w+)\s+import",
-                r"(\w+)\.",
-            ],
-            "javascript": [
-                r"require\s*\(\s*['\"]([^'\"]+)['\"]",
-                r"import.*from\s+['\"]([^'\"]+)['\"]",
-                r"(\w+)\.",
-            ],
-            "typescript": [
-                r"import.*from\s+['\"]([^'\"]+)['\"]",
-                r"import\s+{\s*([^}]+)\s*}\s+from",
-                r"(\w+)\.",
-            ],
-            "go": [
-                r"(\w+)\.",
-            ],
-            "rust": [
-                r"use\s+([^;]+)",
-                r"(\w+)::",
-            ],
-        }
-        patterns = import_patterns.get(self.lang_name, [])
+        # Simplified dependency extraction (less accurate than semantic graphs)
         internal_calls = []
         external_imports = set()
 
-        # Analyzing each function for dependencies
         for func in functions:
             func_code = func["complete_code"]
             func_name = func["name"]
 
-            # Finding function calls within this function
+            # Basic function call detection (regex-based)
             for other_func in functions:
                 if other_func["name"] != func_name:
                     pattern = r"\b" + re.escape(other_func["name"]) + r"\s*\("
                     if re.search(pattern, func_code):
-                        internal_calls.append(
-                            {
-                                "caller": func_name,
-                                "callee": other_func["name"],
-                                "line": func["line"],
-                            }
-                        )
+                        internal_calls.append({
+                            "caller": func_name,
+                            "callee": other_func["name"],
+                            "line": func["line"],
+                        })
 
-            # Finding import usage in this function
+            # Basic import usage detection (text-based)
             for imp in imports:
                 imp_name = imp["module"]
                 if imp_name in func_code:
                     external_imports.add(imp_name)
-
-            # Finding patterns in function code
-            for pattern in patterns:
-                matches = re.finditer(pattern, func_code)
-                for match in matches:
-                    if len(match.groups()) > 0:
-                        import_name = match.group(1)
-                        if import_name not in [f["name"] for f in functions]:
-                            external_imports.add(import_name)
 
         return {
             "internal_calls": internal_calls,
@@ -398,3 +369,62 @@ class MultiLanguageAnalyzer:
                 for func in functions
             },
         }
+
+    def extract_semantic_analysis(self, tree, source_code: str, file_path: str) -> Dict[str, Any]:
+        """
+        Enhanced analysis using semantic graphs (combining our approach with friend's approach)
+        """
+        try:
+            # Create semantic graph builder
+            graph_builder = SemanticGraphBuilder(self.lang_name)
+
+            # Build semantic graph
+            semantic_graph = graph_builder.build_semantic_graph(
+                tree,
+                source_code.encode('utf-8'),
+                file_path
+            )
+
+            # Get analysis from semantic graph
+            semantic_analysis = graph_builder.to_analysis_dict()
+
+            # Enhance with our existing detailed function extraction
+            our_functions = self.extract_functions(tree, source_code)
+            our_imports = self.extract_imports(tree)
+            our_classes = self.extract_classes(tree)
+
+            # Merge both approaches for comprehensive analysis
+            enhanced_analysis = {
+                # Our detailed function analysis (with complete code)
+                "detailed_functions": our_functions,
+                "detailed_imports": our_imports,
+                "detailed_classes": our_classes,
+
+                # Friend's semantic graph analysis (relationships)
+                "semantic_functions": semantic_analysis["functions"],
+                "semantic_imports": semantic_analysis["imports"],
+                "semantic_classes": semantic_analysis["classes"],
+                "function_dependencies": semantic_analysis["dependencies"],
+                "import_usage": semantic_analysis["import_usage"],
+
+                # Graph statistics
+                "graph_stats": semantic_analysis["graph_stats"],
+
+                # Metadata
+                "file_path": file_path,
+                "language": self.lang_name,
+                "analysis_method": "hybrid_detailed_semantic"
+            }
+
+            return enhanced_analysis
+
+        except Exception as e:
+            print(f"Warning: Semantic analysis failed, falling back to basic extraction: {e}")
+            # Fallback to our existing methods
+            return {
+                "detailed_functions": self.extract_functions(tree, source_code),
+                "detailed_imports": self.extract_imports(tree),
+                "detailed_classes": self.extract_classes(tree),
+                "function_dependencies": self.extract_dependencies(tree, source_code)["function_dependencies"],
+                "analysis_method": "fallback_basic"
+            }
