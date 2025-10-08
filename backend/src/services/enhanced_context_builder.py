@@ -58,7 +58,6 @@ class EnhancedContextBuilder:
 
         return cross_file_deps
 
-    def _resolve_module_path(self, module_name: str, repo_path: str) -> Optional[str]:
         """
         Simple module path resolution.
         Converts module names to file paths.
@@ -119,7 +118,6 @@ class EnhancedContextBuilder:
             )
 
             # Perform deep semantic analysis using the new semantics module
-            deep_semantics = analyze_semantics(code, file_path)
 
             # Resolve cross-file dependencies using simple logic
             cross_file_deps = self._resolve_cross_file_dependencies(
@@ -191,7 +189,10 @@ class EnhancedContextBuilder:
         security_patterns = semantic_analysis.get("security_patterns", [])
         function_complexity = semantic_analysis.get("function_complexity", {})
         semantic_graph = semantic_analysis.get("semantic_graph", {})
-        graph_stats = semantic_graph.get("graph_stats", {})
+        # Get graph_stats from top level (where ast_parser stores it) or from semantic_graph
+        graph_stats = semantic_analysis.get(
+            "graph_stats", semantic_graph.get("graph_stats", {})
+        )
         cross_file_dependencies = semantic_analysis.get("cross_file_dependencies", [])
 
         markdown = f"""## Enhanced File Analysis: `{file_path}`
