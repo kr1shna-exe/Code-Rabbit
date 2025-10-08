@@ -38,6 +38,8 @@ class SemanticAnalyzer:
         self.variable_types: Dict[str, str] = {}
         self.function_complexity: Dict[str, int] = {}
         self.security_patterns: List[Dict[str, Any]] = []
+        self.imports_map = {}  # Simple import_name -> module mapping
+        self.function_calls = []  # Simple function call tracking
 
     def analyze_code_semantics(self, code: str, file_path: str) -> Dict[str, Any]:
         """
@@ -52,6 +54,8 @@ class SemanticAnalyzer:
             self.variable_types.clear()
             self.function_complexity.clear()
             self.security_patterns.clear()
+            self.imports_map.clear()
+            self.function_calls.clear()
 
             # Perform semantic analysis
             self._analyze_functions(tree, file_path)
@@ -70,6 +74,8 @@ class SemanticAnalyzer:
                 "variable_types": self.variable_types,
                 "function_complexity": self.function_complexity,
                 "security_patterns": self.security_patterns,
+                "imports_map": self.imports_map,  # Simple import mapping
+                "function_calls": self.function_calls,  # Simple function call tracking
                 "analysis_type": "semantic",
                 "semantic_insights": self._extract_semantic_insights(),
             }
@@ -150,32 +156,19 @@ class SemanticAnalyzer:
                 self._analyze_class_methods(node, class_node, file_path)
 
     def _analyze_imports(self, tree: ast.AST, file_path: str):
-        """Analyze imports and their usage throughout the code"""
+        """Analyze imports and create simple import mapping"""
         for node in ast.walk(tree):
             if isinstance(node, ast.Import):
                 for alias in node.names:
-                    import_node = SemanticNode(
-                        id=f"import_{alias.name}_{file_path}",
-                        type="import",
-                        name=alias.name,
-                        line=node.lineno,
-                        file_path=file_path,
-                        metadata={"alias": alias.asname},
-                    )
-                    self.nodes.append(import_node)
+                    # Simple mapping: import_name -> module_name
+                    import_name = alias.asname or alias.name
+                    self.imports_map[import_name] = alias.name
 
             elif isinstance(node, ast.ImportFrom):
                 module = node.module or ""
                 for alias in node.names:
-                    import_node = SemanticNode(
-                        id=f"import_{module}_{alias.name}_{file_path}",
-                        type="import",
-                        name=alias.name,
-                        line=node.lineno,
-                        file_path=file_path,
-                        metadata={"module": module, "alias": alias.asname},
-                    )
-                    self.nodes.append(import_node)
+                    # Simple mapping: function_name -> module_name
+                    self.imports_map[alias.name] = module
 
     def _detect_security_patterns(self, tree: ast.AST, file_path: str):
         """Detect potential security patterns and vulnerabilities"""
@@ -306,8 +299,20 @@ class SemanticAnalyzer:
                         target=target_id,
                         relationship="calls",
                         line=child.lineno,
+                        metadata={
+                            "call_name": call_name,
+                            "is_cross_file": False  # Will be updated by context builder
+                        }
                     )
                     self.edges.append(edge)
+
+                    # Simple function call tracking
+                    self.function_calls.append({
+                        "calling_function": func_node.name,
+                        "called_function": call_name,
+                        "line": child.lineno,
+                        "file_path": file_path
+                    })
 
     def _analyze_class_methods(
         self, node: ast.ClassDef, class_node: SemanticNode, file_path: str
@@ -362,6 +367,7 @@ class SemanticAnalyzer:
             return node.func.id in ["eval", "exec", "compile"]
         return False
 
+    
 
 def analyze_semantics(code: str, file_path: str) -> Dict[str, Any]:
     analyzer = SemanticAnalyzer()

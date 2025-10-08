@@ -16,6 +16,76 @@ class EnhancedContextBuilder:
     def __init__(self):
         pass
 
+    def _resolve_cross_file_dependencies(self, semantic_analysis: Dict[str, Any], repo_path: str) -> Dict[str, Any]:
+        """
+        Simple cross-file dependency resolution.
+        Matches function calls to imports and fetches source code.
+        """
+        imports_map = semantic_analysis.get("imports_map", {})
+        function_calls = semantic_analysis.get("function_calls", [])
+
+        cross_file_deps = []
+
+        for call in function_calls:
+            called_func = call.get("called_function")
+            calling_func = call.get("calling_function")
+            line = call.get("line")
+
+            # Check if this function call matches an import
+            if called_func in imports_map:
+                module_name = imports_map[called_func]
+
+                # Resolve file path (simple conversion)
+                target_file = self._resolve_module_path(module_name, repo_path)
+
+                if target_file and Path(target_file).exists():
+                    # Fetch source code
+                    source_code = self._read_file_content(target_file)
+
+                    if source_code:
+                        cross_file_deps.append({
+                            "calling_function": calling_func,
+                            "called_function": called_func,
+                            "line": line,
+                            "target_file": target_file,
+                            "target_source_code": source_code,
+                            "module_name": module_name
+                        })
+
+        return cross_file_deps
+
+    def _resolve_module_path(self, module_name: str, repo_path: str) -> Optional[str]:
+        """
+        Simple module path resolution.
+        Converts module names to file paths.
+        """
+        if not module_name:
+            return None
+
+        # Try common patterns
+        potential_paths = [
+            f"{module_name.replace('.', '/')}.py",
+            f"{module_name.replace('.', '/')}/__init__.py",
+            f"{module_name}.py"
+        ]
+
+        for path in potential_paths:
+            full_path = Path(repo_path) / path
+            if full_path.exists():
+                return str(full_path)
+
+        return None
+
+    def _read_file_content(self, file_path: str) -> Optional[str]:
+        """
+        Simple file content reader.
+        """
+        try:
+            return Path(file_path).read_text(encoding='utf-8')
+        except Exception as e:
+            print(f"Warning: Could not read file {file_path}: {e}")
+            return None
+
     def create_ast_markdown_context(self, file_path: str, repo_path: str) -> str:
         """
         Creating markdown context from AST parser for a specific file
@@ -47,7 +117,10 @@ class EnhancedContextBuilder:
             # Perform deep semantic analysis using the new semantics module
             deep_semantics = analyze_semantics(code, file_path)
 
-            # Merge semantic analysis with deep semantics
+            # Resolve cross-file dependencies using simple logic
+            cross_file_deps = self._resolve_cross_file_dependencies(deep_semantics, repo_path)
+
+            # Merge semantic analysis with deep semantics and cross-file resolution
             if deep_semantics.get("analysis_type") == "semantic":
                 semantic_analysis.update(
                     {
@@ -62,7 +135,9 @@ class EnhancedContextBuilder:
                         "function_complexity": deep_semantics.get(
                             "function_complexity", {}
                         ),
-                        "analysis_method": "enhanced_semantic",
+                        "cross_file_dependencies": cross_file_deps,
+                        "imports_map": deep_semantics.get("imports_map", {}),
+                        "analysis_method": "enhanced_semantic_with_cross_file",
                     }
                 )
             else:
@@ -111,6 +186,7 @@ class EnhancedContextBuilder:
         function_complexity = semantic_analysis.get("function_complexity", {})
         semantic_graph = semantic_analysis.get("semantic_graph", {})
         graph_stats = semantic_graph.get("graph_stats", {})
+        cross_file_dependencies = semantic_analysis.get("cross_file_dependencies", [])
 
         markdown = f"""## Enhanced File Analysis: `{file_path}`
 
@@ -205,6 +281,30 @@ class EnhancedContextBuilder:
                 if imports_used:
                     markdown += f"- **{func_name}()** uses: {', '.join(imports_used)}\n"
             markdown += "\n"
+
+        # Cross-File Dependencies
+        if cross_file_dependencies:
+            markdown += "### Cross-File Dependencies\n\n"
+            for dep in cross_file_dependencies:
+                calling_func = dep.get("calling_function", "Unknown")
+                called_func = dep.get("called_function", "Unknown")
+                line = dep.get("line", "Unknown")
+                target_file = dep.get("target_file", "Unknown")
+                module_name = dep.get("module_name", "Unknown")
+                source_code = dep.get("target_source_code", "")
+
+                markdown += f"""#### {calling_func}() calls {called_func}() (line {line})
+
+**Import from module:** `{module_name}`
+**Source file:** `{target_file}`
+
+**Source Code:**
+```python
+{source_code}
+```
+
+---
+"""
 
         # Imports
         if detailed_imports:
