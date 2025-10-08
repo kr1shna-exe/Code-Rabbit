@@ -1,7 +1,7 @@
 import json
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, Optional
+from typing import Any, Dict, Optional
 
 from .ast_parser import MultiLanguageAnalyzer
 from .semantics import analyze_semantics
@@ -16,7 +16,9 @@ class EnhancedContextBuilder:
     def __init__(self):
         pass
 
-    def _resolve_cross_file_dependencies(self, semantic_analysis: Dict[str, Any], repo_path: str) -> Dict[str, Any]:
+    def _resolve_cross_file_dependencies(
+        self, semantic_analysis: Dict[str, Any], repo_path: str
+    ) -> Dict[str, Any]:
         """
         Simple cross-file dependency resolution.
         Matches function calls to imports and fetches source code.
@@ -43,14 +45,16 @@ class EnhancedContextBuilder:
                     source_code = self._read_file_content(target_file)
 
                     if source_code:
-                        cross_file_deps.append({
-                            "calling_function": calling_func,
-                            "called_function": called_func,
-                            "line": line,
-                            "target_file": target_file,
-                            "target_source_code": source_code,
-                            "module_name": module_name
-                        })
+                        cross_file_deps.append(
+                            {
+                                "calling_function": calling_func,
+                                "called_function": called_func,
+                                "line": line,
+                                "target_file": target_file,
+                                "target_source_code": source_code,
+                                "module_name": module_name,
+                            }
+                        )
 
         return cross_file_deps
 
@@ -66,7 +70,7 @@ class EnhancedContextBuilder:
         potential_paths = [
             f"{module_name.replace('.', '/')}.py",
             f"{module_name.replace('.', '/')}/__init__.py",
-            f"{module_name}.py"
+            f"{module_name}.py",
         ]
 
         for path in potential_paths:
@@ -81,7 +85,7 @@ class EnhancedContextBuilder:
         Simple file content reader.
         """
         try:
-            return Path(file_path).read_text(encoding='utf-8')
+            return Path(file_path).read_text(encoding="utf-8")
         except Exception as e:
             print(f"Warning: Could not read file {file_path}: {e}")
             return None
@@ -118,7 +122,9 @@ class EnhancedContextBuilder:
             deep_semantics = analyze_semantics(code, file_path)
 
             # Resolve cross-file dependencies using simple logic
-            cross_file_deps = self._resolve_cross_file_dependencies(deep_semantics, repo_path)
+            cross_file_deps = self._resolve_cross_file_dependencies(
+                deep_semantics, repo_path
+            )
 
             # Merge semantic analysis with deep semantics and cross-file resolution
             if deep_semantics.get("analysis_type") == "semantic":

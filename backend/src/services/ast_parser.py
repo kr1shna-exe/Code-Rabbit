@@ -1,12 +1,15 @@
+import re
+from typing import Any, Dict, List, Optional
+
 import tree_sitter_go as tsgo
 import tree_sitter_javascript as tsjs
 import tree_sitter_python as tspython
 import tree_sitter_rust as tsrust
 import tree_sitter_typescript as tsts
 from tree_sitter import Language, Parser, Query, QueryCursor
-import re
-from typing import Dict, List, Optional, Any
+
 from .semantics import analyze_semantics
+
 
 class MultiLanguageAnalyzer:
     LANGUAGES = {
@@ -327,7 +330,11 @@ class MultiLanguageAnalyzer:
         For enhanced analysis with AST-accurate relationships, use extract_semantic_analysis().
         """
         if not code:
-            return {"internal_calls": [], "external_imports": [], "function_dependencies": {}}
+            return {
+                "internal_calls": [],
+                "external_imports": [],
+                "function_dependencies": {},
+            }
 
         functions = self.extract_functions(tree, code)
         imports = self.extract_imports(tree)
@@ -345,11 +352,13 @@ class MultiLanguageAnalyzer:
                 if other_func["name"] != func_name:
                     pattern = r"\b" + re.escape(other_func["name"]) + r"\s*\("
                     if re.search(pattern, func_code):
-                        internal_calls.append({
-                            "caller": func_name,
-                            "callee": other_func["name"],
-                            "line": func["line"],
-                        })
+                        internal_calls.append(
+                            {
+                                "caller": func_name,
+                                "callee": other_func["name"],
+                                "line": func["line"],
+                            }
+                        )
 
             # Basic import usage detection (text-based)
             for imp in imports:
@@ -370,7 +379,9 @@ class MultiLanguageAnalyzer:
             },
         }
 
-    def extract_semantic_analysis(self, tree, source_code: str, file_path: str) -> Dict[str, Any]:
+    def extract_semantic_analysis(
+        self, tree, source_code: str, file_path: str
+    ) -> Dict[str, Any]:
         """
         Enhanced analysis using semantic graphs (combining our approach with friend's approach)
         """
@@ -391,8 +402,8 @@ class MultiLanguageAnalyzer:
                         "total_edges": 0,
                         "functions": 0,
                         "classes": 0,
-                        "imports": 0
-                    }
+                        "imports": 0,
+                    },
                 }
 
             # Enhance with our existing detailed function extraction
@@ -406,39 +417,43 @@ class MultiLanguageAnalyzer:
                 "detailed_functions": our_functions,
                 "detailed_imports": our_imports,
                 "detailed_classes": our_classes,
-
                 # Semantic analysis from new semantics module
-                "function_dependencies": self._extract_function_dependencies(semantic_analysis),
+                "function_dependencies": self._extract_function_dependencies(
+                    semantic_analysis
+                ),
                 "import_usage": self._extract_import_usage(semantic_analysis),
-
                 # Graph statistics from semantic graph
                 "graph_stats": semantic_graph.get("graph_stats", {}),
-
                 # Additional semantic insights
                 "semantic_insights": semantic_analysis.get("semantic_insights", []),
                 "security_patterns": semantic_analysis.get("security_patterns", []),
                 "function_complexity": semantic_analysis.get("function_complexity", {}),
-
                 # Metadata
                 "file_path": file_path,
                 "language": self.lang_name,
-                "analysis_method": "enhanced_semantic"
+                "analysis_method": "enhanced_semantic",
             }
 
             return enhanced_analysis
 
         except Exception as e:
-            print(f"Warning: Semantic analysis failed, falling back to basic extraction: {e}")
+            print(
+                f"Warning: Semantic analysis failed, falling back to basic extraction: {e}"
+            )
             # Fallback to our existing methods
             return {
                 "detailed_functions": self.extract_functions(tree, source_code),
                 "detailed_imports": self.extract_imports(tree),
                 "detailed_classes": self.extract_classes(tree),
-                "function_dependencies": self.extract_dependencies(tree, source_code)["function_dependencies"],
-                "analysis_method": "fallback_basic"
+                "function_dependencies": self.extract_dependencies(tree, source_code)[
+                    "function_dependencies"
+                ],
+                "analysis_method": "fallback_basic",
             }
 
-    def _extract_function_dependencies(self, semantic_analysis: Dict[str, Any]) -> Dict[str, List[str]]:
+    def _extract_function_dependencies(
+        self, semantic_analysis: Dict[str, Any]
+    ) -> Dict[str, List[str]]:
         """Extract function dependencies from semantic analysis"""
         function_dependencies = {}
 
@@ -461,7 +476,9 @@ class MultiLanguageAnalyzer:
 
         return function_dependencies
 
-    def _extract_import_usage(self, semantic_analysis: Dict[str, Any]) -> Dict[str, List[str]]:
+    def _extract_import_usage(
+        self, semantic_analysis: Dict[str, Any]
+    ) -> Dict[str, List[str]]:
         """Extract import usage from semantic analysis"""
         import_usage = {}
 
