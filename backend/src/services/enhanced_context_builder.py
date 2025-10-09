@@ -147,6 +147,7 @@ class EnhancedContextBuilder:
                         ),
                         "cross_file_dependencies": cross_file_deps,
                         "imports_map": deep_semantics.get("imports_map", {}),
+                        "import_usage": semantic_analysis.get("import_usage", {}),
                         "analysis_method": "enhanced_semantic_with_cross_file",
                     }
                 )
