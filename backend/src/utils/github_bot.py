@@ -18,9 +18,7 @@ class GitHubBot:
             print(f"Starting the bot...")
             repo = self.github.get_repo(repo_full_name)
             pr = repo.get_pull(pr_number)
-            pr.create_issue_comment(ai_review)
             print(f"Created the comment..")
             return True
         except Exception as e:
             raise HTTPException(status_code=500, detail=str(e))
-
