@@ -479,30 +479,8 @@ class MultiLanguageAnalyzer:
     def _extract_import_usage(
         self, semantic_analysis: Dict[str, Any]
     ) -> Dict[str, List[str]]:
-        """Extract import usage from semantic analysis"""
-        import_usage = {}
-
-        if semantic_analysis.get("analysis_type") == "semantic":
-            # Get imports map and function calls from semantic analysis
-            imports_map = semantic_analysis.get("imports_map", {})
-            function_calls = semantic_analysis.get("function_calls", [])
-
-            # Build import usage by checking which functions use which imports
-            for call in function_calls:
-                calling_func = call.get("calling_function", "")
-                called_func = call.get("called_function", "")
-
-                # Extract base function name from called function
-                base_func_name = called_func.split('.')[0] if '.' in called_func else called_func
-
-                # Check if the base function name matches any import
-                if base_func_name in imports_map:
-                    module_name = imports_map[base_func_name]
-
-                    if calling_func not in import_usage:
-                        import_usage[calling_func] = []
-
-                    if module_name not in import_usage[calling_func]:
-                        import_usage[calling_func].append(module_name)
-
-        return import_usage
+        """
+        Simplified import usage - no longer tracking per-function usage
+        since we now provide ALL imported files for comprehensive context.
+        """
+        return {}  # Empty dict since comprehensive imports provide all context

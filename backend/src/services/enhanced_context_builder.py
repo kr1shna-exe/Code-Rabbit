@@ -20,45 +20,63 @@ class EnhancedContextBuilder:
         self, semantic_analysis: Dict[str, Any], repo_path: str
     ) -> Dict[str, Any]:
         """
-        Simple cross-file dependency resolution.
-        Matches function calls to imports and fetches source code.
+        Comprehensive cross-file dependency resolution.
+        Fetches source code for ALL imported files, regardless of direct usage.
         """
         imports_map = semantic_analysis.get("imports_map", {})
-        function_calls = semantic_analysis.get("function_calls", [])
 
         cross_file_deps = []
+        imported_files = set()  # Track unique files to avoid duplicates
 
-        for call in function_calls:
-            called_func = call.get("called_function")
-            calling_func = call.get("calling_function")
-            line = call.get("line")
+        # Get ALL imported modules, not just those used in function calls
+        for import_name, module_name in imports_map.items():
+            # Resolve file path
+            target_file = self._resolve_module_path(module_name, repo_path)
 
-            # Check if this function call matches an import
-            # Extract base function name (e.g., "settings" from "settings.get_database_url")
-            base_func_name = called_func.split('.')[0] if '.' in called_func else called_func
-            if base_func_name in imports_map:
-                module_name = imports_map[base_func_name]
+            if target_file and Path(target_file).exists() and target_file not in imported_files:
+                # Fetch source code
+                source_code = self._read_file_content(target_file)
 
-                # Resolve file path (simple conversion)
-                target_file = self._resolve_module_path(module_name, repo_path)
-
-                if target_file and Path(target_file).exists():
-                    # Fetch source code
-                    source_code = self._read_file_content(target_file)
-
-                    if source_code:
-                        cross_file_deps.append(
-                            {
-                                "calling_function": calling_func,
-                                "called_function": called_func,
-                                "line": line,
-                                "target_file": target_file,
-                                "target_source_code": source_code,
-                                "module_name": module_name,
+                if source_code:
+                    imported_files.add(target_file)
+                    cross_file_deps.append(
+                        {
+                            "import_name": import_name,  # e.g., "settings"
+                            "module_name": module_name,  # e.g., "utils.config"
+                            "target_file": target_file,
+                            "target_source_code": source_code,
+                            "import_type": self._get_import_type(module_name, repo_path),
+                            "metadata": {
+                                "resolved_at": str(Path(target_file).name),
+                                "line_count": len(source_code.split('\n')),
+                                "file_size": len(source_code),
                             }
-                        )
+                        }
+                    )
 
-        return cross_file_deps
+        return {
+            "dependencies": cross_file_deps,
+            "total_imports": len(cross_file_deps),
+            "import_summary": {
+                "total_files": len(cross_file_deps),
+                "total_lines": sum(dep["metadata"]["line_count"] for dep in cross_file_deps),
+                "unique_modules": len(set(dep["module_name"] for dep in cross_file_deps)),
+                "internal_imports": len([dep for dep in cross_file_deps if dep["import_type"] == "internal"]),
+                "external_imports": len([dep for dep in cross_file_deps if dep["import_type"] == "external"]),
+            }
+        }
+
+    def _get_import_type(self, module_name: str, repo_path: str) -> str:
+        """Determine import type based on file existence in the repo"""
+        # Try to resolve the module path using existing logic
+        target_file = self._resolve_module_path(module_name, repo_path)
+
+        if target_file and Path(target_file).exists():
+            # If we can find the file in the repo, it's internal
+            return "internal"
+        else:
+            # If not found in repo, it's an external package
+            return "external"
 
     def _resolve_module_path(self, module_name: str, repo_path: str) -> Optional[str]:
         """
@@ -83,6 +101,61 @@ class EnhancedContextBuilder:
                 return str(full_path)
 
         return None
+
+    def _prepare_vector_db_context(self, cross_file_deps: Dict[str, Any], file_path: str) -> Dict[str, Any]:
+        """
+        Prepare structured import context for VectorDB integration.
+        This creates a clean, structured representation of all imported files.
+        """
+        if not cross_file_deps or not isinstance(cross_file_deps, dict):
+            return {}
+
+        dependencies = cross_file_deps.get("dependencies", [])
+        import_summary = cross_file_deps.get("import_summary", {})
+
+        # Structure data for VectorDB
+        vector_db_context = {
+            "source_file": file_path,
+            "import_timestamp": datetime.now().isoformat(),
+            "summary": {
+                "total_imported_files": import_summary.get("total_files", 0),
+                "total_lines": import_summary.get("total_lines", 0),
+                "internal_files": import_summary.get("internal_imports", 0),
+                "external_files": import_summary.get("external_imports", 0),
+            },
+            "imports": []
+        }
+
+        # Process each imported file
+        for dep in dependencies:
+            import_data = {
+                "import_name": dep.get("import_name"),
+                "module_name": dep.get("module_name"),
+                "file_path": dep.get("target_file"),
+                "import_type": dep.get("import_type"),  # "internal" or "external"
+                "metadata": dep.get("metadata", {}),
+                "content": {
+                    "full_source": dep.get("target_source_code", ""),
+                    "line_count": dep.get("metadata", {}).get("line_count", 0),
+                    "file_size": dep.get("metadata", {}).get("file_size", 0),
+                },
+                "vector_db_ready": {
+                    "document_id": f"{file_path}::{dep.get('import_name')}",
+                    "content_hash": self._calculate_content_hash(dep.get("target_source_code", "")),
+                    "chunking_info": {
+                        "recommended_chunk_size": min(1000, dep.get("metadata", {}).get("line_count", 0) * 50),
+                        "total_chunks": max(1, (dep.get("metadata", {}).get("line_count", 0) * 50) // 1000),
+                    }
+                }
+            }
+            vector_db_context["imports"].append(import_data)
+
+        return vector_db_context
+
+    def _calculate_content_hash(self, content: str) -> str:
+        """Calculate a simple hash for content to detect changes"""
+        import hashlib
+        return hashlib.md5(content.encode()).hexdigest()[:16]
 
     def _read_file_content(self, file_path: str) -> Optional[str]:
         """
@@ -294,29 +367,71 @@ class EnhancedContextBuilder:
                     markdown += f"- **{func_name}()** uses: {', '.join(imports_used)}\n"
             markdown += "\n"
 
-        # Cross-File Dependencies
-        if cross_file_dependencies:
-            markdown += "### Cross-File Dependencies\n\n"
-            for dep in cross_file_dependencies:
-                calling_func = dep.get("calling_function", "Unknown")
-                called_func = dep.get("called_function", "Unknown")
-                line = dep.get("line", "Unknown")
-                target_file = dep.get("target_file", "Unknown")
-                module_name = dep.get("module_name", "Unknown")
-                source_code = dep.get("target_source_code", "")
+        # Cross-File Dependencies (Comprehensive Import Context)
+        if cross_file_dependencies and isinstance(cross_file_dependencies, dict):
+            dependencies = cross_file_dependencies.get("dependencies", [])
+            import_summary = cross_file_dependencies.get("import_summary", {})
 
-                markdown += f"""#### {calling_func}() calls {called_func}() (line {line})
+            if dependencies:
+                markdown += f"""### Comprehensive Import Context ({import_summary.get('total_files', 0)} files)
 
-**Import from module:** `{module_name}`
-**Source file:** `{target_file}`
+**Import Summary:**
+- **Total Files**: {import_summary.get('total_files', 0)}
+- **Total Lines**: {import_summary.get('total_lines', 0)}
+- **Internal Imports**: {import_summary.get('internal_imports', 0)}
+- **External Imports**: {import_summary.get('external_imports', 0)}
+
+"""
+
+                # Group imports by type
+                internal_imports = [dep for dep in dependencies if dep.get("import_type") == "internal"]
+                external_imports = [dep for dep in dependencies if dep.get("import_type") == "external"]
+
+                # Show internal imports first (most relevant)
+                if internal_imports:
+                    markdown += "#### Internal Project Imports\n\n"
+                    for dep in internal_imports:
+                        import_name = dep.get("import_name", "Unknown")
+                        module_name = dep.get("module_name", "Unknown")
+                        target_file = dep.get("target_file", "Unknown")
+                        source_code = dep.get("target_source_code", "")
+                        metadata = dep.get("metadata", {})
+
+                        # Limit source code display for readability
+                        display_code = source_code[:1000] + "..." if len(source_code) > 1000 else source_code
+
+                        markdown += f"""**{import_name}** from `{module_name}`
+
+**File:** `{target_file}`
+**Lines:** {metadata.get('line_count', 'N/A')} | **Size:** {metadata.get('file_size', 'N/A')} chars
 
 **Source Code:**
 ```python
-{source_code}
+{display_code}
 ```
 
 ---
 """
+
+                # Show external imports (optional, for completeness)
+                if external_imports:
+                    markdown += "#### External Package Imports\n\n"
+                    for dep in external_imports:
+                        import_name = dep.get("import_name", "Unknown")
+                        module_name = dep.get("module_name", "Unknown")
+                        target_file = dep.get("target_file", "Unknown")
+
+                        markdown += f"- **{import_name}** from `{module_name}` (external package)\n"
+                    markdown += "\n"
+
+        # Keep simple import usage for reference, but note it's now comprehensive
+        if import_usage:
+            markdown += "### Function-Level Import Usage (Reference)\n\n"
+            markdown += "*Note: Above shows ALL imported files. This section shows direct function usage only.*\n\n"
+            for func_name, imports_used in import_usage.items():
+                if imports_used:
+                    markdown += f"- **{func_name}()** directly uses: {', '.join(imports_used)}\n"
+            markdown += "\n"
 
         # Imports
         if detailed_imports:
