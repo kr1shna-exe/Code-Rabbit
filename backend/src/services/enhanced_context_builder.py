@@ -34,8 +34,10 @@ class EnhancedContextBuilder:
             line = call.get("line")
 
             # Check if this function call matches an import
-            if called_func in imports_map:
-                module_name = imports_map[called_func]
+            # Extract base function name (e.g., "settings" from "settings.get_database_url")
+            base_func_name = called_func.split('.')[0] if '.' in called_func else called_func
+            if base_func_name in imports_map:
+                module_name = imports_map[base_func_name]
 
                 # Resolve file path (simple conversion)
                 target_file = self._resolve_module_path(module_name, repo_path)
@@ -71,6 +73,8 @@ class EnhancedContextBuilder:
             f"{module_name.replace('.', '/')}.py",
             f"{module_name.replace('.', '/')}/__init__.py",
             f"{module_name}.py",
+            f"backend/src/{module_name.replace('.', '/')}.py",
+            f"backend/src/{module_name.replace('.', '/')}/__init__.py",
         ]
 
         for path in potential_paths:
