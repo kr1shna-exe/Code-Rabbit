@@ -6,7 +6,7 @@ from git_ops.repo_manager import RepoManager
 from ai.code_reviewer import review_code
 from utils.github_bot import GitHubBot
 from services.history_fetcher import HistoryFetcher
-from services.enhanced_context_builder import EnhancedContextBuilder
+from services.simple_context_builder import SimpleContextBuilder
 
 router = APIRouter()
 repo_manager = RepoManager(settings.temp_repo_dir)
@@ -91,15 +91,23 @@ async def github_webhook(request: Request, background_tasks: BackgroundTasks, x_
         diff_data['pr_title'] = pr_title
         diff_data['pr_description'] = pr.get('body', '')
 
-        # Initialize enhanced context builder
-        context_builder = EnhancedContextBuilder()
+        try:
+            # Initialize simplified context builder
+            context_builder = SimpleContextBuilder()
+            print("✅ Context builder initialized")
 
-        # Build comprehensive context (diff + history + AST analysis)
-        comprehensive_context = context_builder.build_comprehensive_ai_context(
-            diff_data=diff_data,
-            pr_history=pr_history,
-            repo_path=repo_path
-        )
+            # Build comprehensive context (diff + history + AST analysis)
+            comprehensive_context = context_builder.build_comprehensive_context(
+                diff_data=diff_data,
+                pr_history=pr_history,
+                repo_path=repo_path
+            )
+            print("✅ Context generated successfully")
+        except Exception as e:
+            print(f"❌ ERROR in context building: {e}")
+            import traceback
+            traceback.print_exc()
+            raise HTTPException(status_code=500, detail=f"Context building failed: {str(e)}")
 
         print(f"Generated enhanced context length: {len(comprehensive_context)} characters")
 
