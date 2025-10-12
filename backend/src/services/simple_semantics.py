@@ -6,7 +6,6 @@ import networkx as nx
 def build_simple_graph(tree, source_code: str, lang: str, file_path: str) -> nx.DiGraph:
     """
     Build a simple semantic graph with just nodes and basic relationships.
-    Removed all the complex metadata and edge types.
     """
     graph = nx.DiGraph()
 
@@ -81,10 +80,6 @@ def build_simple_graph(tree, source_code: str, lang: str, file_path: str) -> nx.
 def analyze_cross_file_imports(
     parsed_files: Dict[str, Tuple], graph: nx.DiGraph
 ) -> Dict[str, Any]:
-    """
-    Simple cross-file import analysis.
-    Removed complex resolution logic and metadata.
-    """
     import_edges = []
     file_imports = {}
 
@@ -140,6 +135,3 @@ def analyze_cross_file_imports(
             "edges": graph.number_of_edges(),
         },
     }
-
-
-

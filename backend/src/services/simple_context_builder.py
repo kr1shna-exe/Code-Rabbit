@@ -22,13 +22,7 @@ class SimpleContextBuilder:
     def build_comprehensive_context(
         self, diff_data: Dict[str, Any], pr_history: Dict[str, Any], repo_path: str
     ) -> str:
-        """
-        Build comprehensive context combining diff, history, and source code.
-        Simplified version - removed complex markdown formatting.
-        """
         context_parts = []
-
-        # PR Header
         context_parts.append(self._build_pr_header(diff_data, pr_history))
 
         # Changed files analysis
@@ -36,7 +30,9 @@ class SimpleContextBuilder:
         for file_path in changed_files:
             full_path = Path(repo_path) / file_path
             if not full_path.exists():
-                context_parts.append(f"## File Analysis: {file_path}\n\n**File not found**: {file_path}\n")
+                context_parts.append(
+                    f"## File Analysis: {file_path}\n\n**File not found**: {file_path}\n"
+                )
                 continue
 
             try:
@@ -45,7 +41,9 @@ class SimpleContextBuilder:
 
                 # Skip if language not supported
                 if language not in LANGUAGE_MODULES:
-                    context_parts.append(f"## File Analysis: {file_path}\n\n**Language not supported**: {language}\n")
+                    context_parts.append(
+                        f"## File Analysis: {file_path}\n\n**Language not supported**: {language}\n"
+                    )
                     continue
 
                 # Parse the file
@@ -73,23 +71,23 @@ class SimpleContextBuilder:
                 # Add to context
                 context_parts.append(
                     self._build_file_analysis(
-                        file_path, diff_data, semantic_analysis, cross_file_deps, graph_insights
+                        file_path,
+                        diff_data,
+                        semantic_analysis,
+                        cross_file_deps,
+                        graph_insights,
                     )
                 )
-
-                # Successfully analyzed
-
             except Exception as e:
-                # Error analyzing file
-
-                # Add error context instead of failing completely
-                context_parts.append(f"## File Analysis: {file_path}\n\n**Error**: {str(e)}\n\n**File content preview**:\n```\n")
-
-                # Try to add basic file content even if parsing fails
+                context_parts.append(
+                    f"## File Analysis: {file_path}\n\n**Error**: {str(e)}\n\n**File content preview**:\n```\n"
+                )
                 try:
-                    with open(full_path, 'r', encoding='utf-8') as f:
+                    with open(full_path, "r", encoding="utf-8") as f:
                         content = f.read()
-                        preview = content[:500] + "..." if len(content) > 500 else content
+                        preview = (
+                            content[:500] + "..." if len(content) > 500 else content
+                        )
                         context_parts.append(preview)
                 except:
                     context_parts.append("Could not read file content")
@@ -109,10 +107,14 @@ class SimpleContextBuilder:
     def _build_pr_header(
         self, diff_data: Dict[str, Any], pr_history: Dict[str, Any]
     ) -> str:
-        """Build PR header with basic information."""
         pr_info = pr_history.get("pr_info", {})
         commits = pr_history.get("commits", [])
         comments = pr_history.get("all_comments", [])
+        maintainers = pr_history.get("maintainers", [])
+        maintainer_reviews = [
+            c for c in comments if c.get("type") == "maintainer_review"
+        ]
+        bot_reviews = [c for c in comments if c.get("type") == "bot_review"]
 
         header = f"""# Pull Request Analysis
 
@@ -124,6 +126,9 @@ class SimpleContextBuilder:
 - **Files Changed**: {len(diff_data.get('diff_files', []))}
 - **Base Branch**: {diff_data.get('base_branch', 'main')}
 - **Head Branch**: {diff_data.get('head_branch', 'feature')}
+- **Repository Maintainers**: {', '.join(maintainers) if maintainers else 'None found'}
+- **Maintainer Reviews**: {len(maintainer_reviews)}
+- **Bot Reviews**: {len(bot_reviews)}
 
 ## PR History Context
 
@@ -190,14 +195,18 @@ class SimpleContextBuilder:
         # Add graph insights
         if graph_insights:
             analysis += f"\n### Code Graph Analysis\n"
-            analysis += f"- **Functions found**: {graph_insights.get('function_count', 0)}\n"
+            analysis += (
+                f"- **Functions found**: {graph_insights.get('function_count', 0)}\n"
+            )
             analysis += f"- **Classes found**: {graph_insights.get('class_count', 0)}\n"
-            analysis += f"- **Import statements**: {graph_insights.get('import_count', 0)}\n"
+            analysis += (
+                f"- **Import statements**: {graph_insights.get('import_count', 0)}\n"
+            )
 
-            if graph_insights.get('function_calls'):
+            if graph_insights.get("function_calls"):
                 analysis += f"- **Function calls detected**: {', '.join(graph_insights['function_calls'][:5])}\n"
 
-            if graph_insights.get('relationships'):
+            if graph_insights.get("relationships"):
                 analysis += f"- **Code relationships**: {graph_insights['relationships']} total connections\n"
 
         # Add git diff
@@ -208,7 +217,6 @@ class SimpleContextBuilder:
         return analysis
 
     def _extract_graph_insights(self, graph) -> Dict[str, Any]:
-        """Extract meaningful insights from the code graph for AI analysis."""
         if not graph:
             return {}
 
@@ -244,12 +252,10 @@ class SimpleContextBuilder:
     def _resolve_simple_dependencies(
         self, semantic_analysis: Dict[str, Any], repo_path: str, current_file: str
     ) -> Dict[str, Any]:
-        """Simplified dependency resolution - just collect import files."""
         imports = semantic_analysis.get("imports", [])
         dependencies = []
 
         for import_name in imports:
-            # Simple resolution logic - handle both dotted and simple imports
             potential_paths = [
                 f"{import_name.replace('.', '/')}.py",  # Direct path (for external repos)
                 f"src/{import_name.replace('.', '/')}.py",  # src/ path (for our repo)
@@ -285,7 +291,6 @@ class SimpleContextBuilder:
     def _collect_all_dependencies(
         self, changed_files: List[str], repo_path: str
     ) -> List[Dict[str, Any]]:
-        """Collect all cross-file dependencies from changed files."""
         all_deps = set()
         dependency_files = []
 
@@ -372,8 +377,5 @@ class SimpleContextBuilder:
         return summary
 
     def _detect_language(self, file_path: str) -> str:
-        """Detect programming language from file extension."""
         ext = Path(file_path).suffix.lower()
         return LANGUAGE_MAP.get(ext, "python")
-
-    

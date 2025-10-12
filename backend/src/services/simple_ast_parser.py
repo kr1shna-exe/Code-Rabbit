@@ -49,7 +49,6 @@ class SimpleASTParser:
         self.lang_name = language
 
     def parse_file(self, file_path: str) -> Tuple[Any, str]:
-        """Parse a file and return tree and source code."""
         with open(file_path, "rb") as f:
             source_code = f.read()
 
@@ -59,9 +58,7 @@ class SimpleASTParser:
 
         return tree, source_code
 
-    
     def extract_functions(self, tree, source_code: str) -> List[Dict[str, Any]]:
-        """Extract function definitions - simplified version."""
         functions = []
 
         def node_text(node):
@@ -119,7 +116,6 @@ class SimpleASTParser:
         return functions
 
     def extract_classes(self, tree, source_code: str) -> List[Dict[str, Any]]:
-        """Extract class definitions - simplified version."""
         classes = []
 
         def node_text(node):
@@ -167,7 +163,6 @@ class SimpleASTParser:
         return classes
 
     def extract_imports(self, tree, source_code: str) -> List[str]:
-        """Extract import statements - simplified version."""
         imports = []
 
         def node_text(node):
@@ -203,14 +198,9 @@ class SimpleASTParser:
         walk(tree.root_node)
         return imports
 
-    
     def extract_semantic_analysis(
         self, tree, source_code: str, file_path: str
     ) -> Dict[str, Any]:
-        """
-        Simplified semantic analysis - just basic extraction.
-        Removed all the complex graph building and metadata.
-        """
         return {
             "file_path": file_path,
             "language": self.lang_name,
@@ -219,4 +209,3 @@ class SimpleASTParser:
             "imports": self.extract_imports(tree, source_code),
             "analysis_method": "simplified_ast",
         }
-

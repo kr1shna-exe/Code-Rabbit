@@ -25,6 +25,15 @@ dependencies = [
     "tree-sitter-go>=0.25.0",
     "tree-sitter-rust>=0.24.0",
     "networkx>=3.2.1",
+    "dotenv>=0.9.9",
+    "sentence-transformers>=5.1.1",
+    "torch>=2.8.0",
+    "qdrant-client>=1.15.1",
+    "langgraph>=0.2.60",
+    "langchain>=0.3.7",
+    "langchain-google-genai>=2.0.4",
+    "zai-sdk>=0.0.4",  # Z.AI API integration
+    "groq>=0.11.0",  # Groq API integration
 ]
 
 [tool.uv]
