@@ -1,4 +1,3 @@
-import datetime
 import hashlib
 import hmac
 import json
@@ -141,12 +140,6 @@ async def github_webhook(
             raise HTTPException(
                 status_code=500, detail=f"Context building failed: {str(e)}"
             )
-
-        timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-        context_file = f"ai_context_{pr_number}_{timestamp}.md"
-
-        with open(context_file, "w", encoding="utf-8") as f:
-            f.write(comprehensive_context)
 
         try:
             ai_review = await review_code_with_multi_agents(

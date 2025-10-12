@@ -121,16 +121,19 @@ async def aggregator_agent(state: dict) -> dict:
         if state.get("performance_agent_status") == AgentStatus.FAILED:
             failed_agents.append("Performance")
 
-        all_issues = []
-        all_issues.extend(parse_agent_issues(security_analysis, changed_files))
-        all_issues.extend(parse_agent_issues(code_quality_analysis, changed_files))
-        all_issues.extend(parse_agent_issues(performance_analysis, changed_files))
+        security_issues = parse_agent_issues(security_analysis, changed_files)
+        code_quality_issues = parse_agent_issues(code_quality_analysis, changed_files)
+        performance_issues = parse_agent_issues(performance_analysis, changed_files)
+
+        all_issues = security_issues + code_quality_issues + performance_issues
 
         summary, inline_comments_data = build_review_with_inline_comments(
             security_analysis,
             code_quality_analysis,
             performance_analysis,
-            all_issues,
+            security_issues,
+            performance_issues,
+            code_quality_issues,
             failed_agents,
             state.get("pr_title", ""),
         )
@@ -154,15 +157,17 @@ def build_review_with_inline_comments(
     security_analysis: str,
     code_quality_analysis: str,
     performance_analysis: str,
-    all_issues: List[ParsedIssue],
+    security_issues: List[ParsedIssue],
+    performance_issues: List[ParsedIssue],
+    code_quality_issues: List[ParsedIssue],
     failed_agents: List[str],
     pr_title: str,
 ) -> tuple[str, List[Dict]]:
     """Build summary review with code suggestions consolidated in one section"""
 
-    # Group issues by file for organized display
+    # Group code quality issues by file for Code Suggestions section
     issues_by_file = {}
-    for issue in all_issues:
+    for issue in code_quality_issues:
         if issue.file_path not in issues_by_file:
             issues_by_file[issue.file_path] = []
         issues_by_file[issue.file_path].append(issue)
@@ -172,7 +177,8 @@ def build_review_with_inline_comments(
         security_analysis,
         code_quality_analysis,
         performance_analysis,
-        all_issues,
+        security_issues,
+        performance_issues,
         issues_by_file,
         failed_agents,
         pr_title,
@@ -182,11 +188,91 @@ def build_review_with_inline_comments(
     return summary, []
 
 
+def normalize_severity(severity: str) -> str:
+    """Normalize severity to CRITICAL or MEDIUM"""
+    if severity in ["CRITICAL", "HIGH"]:
+        return "CRITICAL"
+    else:
+        return "MEDIUM"
+
+
+def build_severity_grouped_section(issues: List[ParsedIssue], section_type: str) -> str:
+    """Build severity-grouped section with code blocks and enhanced UI"""
+    if not issues:
+        return ""
+
+    # Normalize and group by severity
+    severity_groups = {"CRITICAL": [], "MEDIUM": []}
+    for issue in issues:
+        normalized = normalize_severity(issue.severity)
+        severity_groups[normalized].append(issue)
+
+    section_parts = []
+
+    # Add alert box at the top
+    total_count = len(issues)
+    critical_count = len(severity_groups["CRITICAL"])
+    medium_count = len(severity_groups["MEDIUM"])
+
+    if critical_count > 0:
+        section_parts.append(f"\n> [!WARNING]")
+        section_parts.append(f"> Found {total_count} {section_type.lower()} issue{'s' if total_count != 1 else ''} that need attention before merging.\n")
+    else:
+        section_parts.append(f"\n> [!CAUTION]")
+        section_parts.append(f"> Found {total_count} {section_type.lower()} issue{'s' if total_count != 1 else ''} to review.\n")
+
+    first_section = True
+    for severity in ["CRITICAL", "MEDIUM"]:
+        severity_issues = severity_groups[severity]
+        if not severity_issues:
+            continue
+
+        # Add horizontal rule between sections
+        if not first_section:
+            section_parts.append("\n---\n")
+        first_section = False
+
+        # Add emoji and count to header
+        emoji = "🔴" if severity == "CRITICAL" else "⚠️"
+        count = len(severity_issues)
+        section_parts.append(f"### {emoji} {severity} ({count} issue{'s' if count != 1 else ''})\n")
+
+        # Create impact summary
+        descriptions = [issue.description for issue in severity_issues]
+        summary = " ".join(descriptions[:2])  # Limit to first 2 descriptions
+        if len(descriptions) > 2:
+            summary += f" (and {len(descriptions) - 2} more)"
+        section_parts.append(f"> **Impact:** {summary}\n")
+
+        # Group by file
+        issues_by_file = {}
+        for issue in severity_issues:
+            if issue.file_path not in issues_by_file:
+                issues_by_file[issue.file_path] = []
+            issues_by_file[issue.file_path].append(issue)
+
+        # Display code blocks per file
+        for file_path, file_issues in issues_by_file.items():
+            section_parts.append(f"\n📄 **{file_path}**\n```python")
+            for issue in file_issues:
+                if issue.current_code:
+                    section_parts.append(f"line {issue.line}: {issue.current_code.strip()}")
+            section_parts.append("```\n")
+
+    # Add tip at the end
+    if critical_count > 0:
+        section_parts.append("\n> [!TIP]")
+        section_parts.append(f"> Fix CRITICAL issues before merging to production.\n")
+
+    return "\n".join(section_parts)
+
+
 def build_summary_review(
     security_analysis: str,
     code_quality_analysis: str,
     performance_analysis: str,
-    all_issues: List[ParsedIssue],
+    security_issues: List[ParsedIssue],
+    performance_issues: List[ParsedIssue],
     issues_by_file: Dict[str, List[ParsedIssue]],
     failed_agents: List[str],
     pr_title: str,
@@ -194,9 +280,9 @@ def build_summary_review(
     """Build high-level summary review with collapsible sections"""
     review_parts = []
 
-    total_issues = len(all_issues)
+    total_issues = len(security_issues) + len(performance_issues) + len(issues_by_file)
 
-    review_parts.append(f"## Review\n")
+    review_parts.append(f"## Code Review\n")
 
     if failed_agents:
         review_parts.append(f"*Note: {', '.join(failed_agents)} analysis failed*\n")
@@ -204,36 +290,36 @@ def build_summary_review(
     if total_issues == 0:
         review_parts.append("**No critical issues found!** Code looks good.\n")
         review_parts.append("---")
-        review_parts.append("*Generated by CodeRabbit AI*")
+        review_parts.append("*Generated by CodeBoss*")
         return "\n".join(review_parts)
 
     if code_quality_analysis and "No major quality" not in code_quality_analysis:
         review_parts.append("<details>")
         review_parts.append(
-            "<summary><strong>Potential Issues Found</strong></summary>\n"
+            "<summary><strong>🔍 Potential Issues Found</strong></summary>\n"
         )
         review_parts.append(code_quality_analysis)
         review_parts.append("\n</details>\n")
 
-    if security_analysis and "No critical security" not in security_analysis:
+    if security_issues:
         review_parts.append("<details>")
         review_parts.append(
-            "<summary><strong>Security Implications</strong></summary>\n"
+            "<summary><strong>🔒 Security Issues</strong></summary>\n"
         )
-        review_parts.append(security_analysis)
+        review_parts.append(build_severity_grouped_section(security_issues, "security"))
         review_parts.append("\n</details>\n")
 
-    if performance_analysis and "No performance issues" not in performance_analysis:
+    if performance_issues:
         review_parts.append("<details>")
         review_parts.append(
-            "<summary><strong>Performance Optimization</strong></summary>\n"
+            "<summary><strong>⚡ Performance Optimization</strong></summary>\n"
         )
-        review_parts.append(performance_analysis)
+        review_parts.append(build_severity_grouped_section(performance_issues, "performance"))
         review_parts.append("\n</details>\n")
 
     if issues_by_file:
         review_parts.append("<details>")
-        review_parts.append("<summary><strong>Code Suggestions</strong></summary>\n")
+        review_parts.append("<summary><strong>💡 Code Suggestions</strong></summary>\n")
 
         for file_path, issues in issues_by_file.items():
             review_parts.append(f"\n`{file_path}`\n")
