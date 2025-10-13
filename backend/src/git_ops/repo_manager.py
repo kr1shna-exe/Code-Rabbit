@@ -11,11 +11,15 @@ class RepoManager:
     def clone_and_setup_repo(self, repo_url: str, pr_number: int, head_branch: str, base_branch: str):
         pr_dir = self.temp_dir / f"pr_{pr_number}"
 
-        # Clean up existing directory if it exists
-        if pr_dir.exists():
-            import shutil
+        try:
+            repo = Repo(pr_dir)
+            origin = repo.remote('origin')
+            origin.fetch()
+            repo.git.checkout(f"origin/{head_branch}")
+            return pr_dir
+        except Exception as e:
+            print(f"Failed to update existing repo: {e}")
             shutil.rmtree(pr_dir)
-
         repo = Repo.clone_from(repo_url, pr_dir, branch=base_branch)
         origin = repo.remote('origin')
         origin.fetch(head_branch)

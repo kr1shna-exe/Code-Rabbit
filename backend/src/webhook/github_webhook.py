@@ -4,7 +4,7 @@ import json
 from typing import Any, Dict, Optional, cast
 
 from fastapi import APIRouter, BackgroundTasks, Depends, Header, HTTPException, Request
-
+from utils.github_bot import InlineComment
 from ai.multi_agent_reviewer import review_code_with_multi_agents
 from db.vector_indexer import VectorIndexer
 from git_ops.repo_manager import RepoManager
@@ -226,8 +226,6 @@ async def process_webhook_background(
                 print(f"Error indexing learnings: {e}")
 
         try:
-            from utils.github_bot import InlineComment
-
             github_bot = GitHubBot(installation_id=installation_id)
 
             if isinstance(ai_review, dict):
@@ -275,13 +273,13 @@ async def process_webhook_background(
         print(f"Error processing webhook: {str(e)}")
         import traceback
         traceback.print_exc()
-    finally:
-        # Always cleanup the cloned repository
-        try:
-            if 'repo_path' in locals() and repo_path:
-                repo_manager.clean_up(repo_path)
-        except Exception as e:
-            print(f"Error cleaning up repository: {e}")
+    # finally:
+          # Always cleanup the cloned repository
+    #     try:
+    #         if 'repo_path' in locals() and repo_path:
+    #             repo_manager.clean_up(repo_path)
+    #     except Exception as e:
+    #         print(f"Error cleaning up repository: {e}")
 
 
 @router.post("/webhook")
@@ -312,18 +310,50 @@ async def github_webhook(
     pr_title = payload_dict.get("pull_request", {}).get("title", "")
     action = payload_dict.get("action", "")
 
+    if action in ["closed"]:
+        pr_dir = repo_manager.temp_dir / f"pr_{pr_number}"
+        if pr_dir.exists():
+            try:
+                repo_manager.clean_up(pr_dir)
+                print(f"Cleaned up repository for closed PR #{pr_number}")
+                return {
+                    "status": "cleaned_up",
+                    "pr_number": pr_number,
+                    "message": f"Repository cache deleted for PR #{pr_number}"
+                }
+            except Exception as e:
+                print(f"Error cleaning up PR #{pr_number}: {e}")
+                return {
+                    "status": "cleanup_failed",
+                    "pr_number": pr_number,
+                    "error": str(e)
+                }
+        else:
+            return {
+                "status": "no_cleanup_needed",
+                "pr_number": pr_number,
+                "message": "No cached repository found"
+            }
     # Queue background task
-    background_tasks.add_task(
-        process_webhook_background,
-        payload_dict,
-        vector_indexer
-    )
+    if action in ["opened", "synchronize", "reopened"]:
+        background_tasks.add_task(
+            process_webhook_background,
+            payload_dict,
+            vector_indexer
+        )
+        
+        return {
+            "status": "accepted",
+            "message": "Processing webhook in background",
+            "pr_number": pr_number,
+            "action": action
+        }
 
     # Return immediately (before timeout)
     return {
-        "status": "accepted",
-        "message": "Processing webhook in background",
+        "status": "skipped",
+        "message": action,
         "pr_number": pr_number,
-        "action": action
+        "action": f"Action '{action}' does not trigger review"
     }
 

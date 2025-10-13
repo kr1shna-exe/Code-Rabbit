@@ -283,7 +283,8 @@ class SimpleContextBuilder:
                             }
                         )
                         break  # Stop after finding the first match
-                    except Exception:
+                    except Exception as e:
+                        print(f"Error reading source code for {import_name}: {e}")
                         continue
 
         return {"dependencies": dependencies, "count": len(dependencies)}
@@ -322,6 +323,7 @@ class SimpleContextBuilder:
                         dependency_files.append(dep)
 
             except Exception as e:
+                print(f"Error collecting dependencies for {file_path}: {e}")
                 continue
         return dependency_files
 
