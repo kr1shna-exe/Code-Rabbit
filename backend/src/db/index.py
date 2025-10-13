@@ -1,4 +1,4 @@
-from qdrant_client.models import Distance, VectorParams
+from qdrant_client.models import Distance, VectorParams, PayloadSchemaType
 
 from utils.qdrant_client import qdrant_client
 
@@ -34,6 +34,20 @@ def initialize_collections():
             )
         else:
             print(f"Collection: {collection_name} already exists")
+
+        # Create payload indexes for filtering
+        try:
+            if collection_name in ["code_graphs", "import_files"]:
+                qdrant_client.create_payload_index(
+                    collection_name=collection_name,
+                    field_name="file_path",
+                    field_schema=PayloadSchemaType.KEYWORD
+                )
+                print(f"Created payload index for {collection_name}.file_path")
+        except Exception as e:
+            # Index might already exist
+            if "already exists" not in str(e).lower():
+                print(f"Note: Could not create index for {collection_name}.file_path: {e}")
 
 
 if __name__ != "__main__":

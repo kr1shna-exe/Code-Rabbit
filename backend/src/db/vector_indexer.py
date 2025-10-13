@@ -10,7 +10,6 @@ from utils.qdrant_client import qdrant_client
 class VectorIndexer:
     def __init__(self, embedding_service):
         self.embedding_service = embedding_service
-        print(f"VectorIndexer initialized")
 
     def index_code_graph(self, file_path: str, graph: nx.DiGraph):
         functions = [
@@ -51,7 +50,6 @@ class VectorIndexer:
             },
         )
         qdrant_client.upsert(collection_name="code_graphs", points=[point])
-        print(f"Indexed code graph: {file_path}")
         return point.id
 
     def index_import_file(
@@ -75,7 +73,6 @@ class VectorIndexer:
             },
         )
         qdrant_client.upsert(collection_name="import_files", points=[point])
-        print(f"Indexed import file: {file_path}")
         return point.id
 
     def index_learning(
@@ -111,7 +108,6 @@ class VectorIndexer:
             },
         )
         qdrant_client.upsert(collection_name="learnings", points=[point])
-        print(f"Indexed learnings")
         return point.id
 
     def _search_similar_graphs(self, query: str, limit: int = 10):

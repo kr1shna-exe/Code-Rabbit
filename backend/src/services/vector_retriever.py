@@ -7,7 +7,7 @@ class VectorRetriever:
     """Simple VectorDB retriever for getting stored code data"""
 
     def __init__(self):
-        print("VectorRetriever initialized")
+        pass
 
     def get_code_graphs_by_files(self, file_paths: List[str]) -> List[Dict]:
         results = []

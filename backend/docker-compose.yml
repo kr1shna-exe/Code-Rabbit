@@ -1,0 +1,31 @@
+version: "3.8"
+
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    environment:
+      - GITHUB_TOKEN=${GITHUB_TOKEN}
+      - GITHUB_WEBHOOK_SECRET=${GITHUB_WEBHOOK_SECRET}
+      - GITHUB_APP_ID=${GITHUB_APP_ID}
+      - GITHUB_APP_PRIVATE_KEY_PATH=${GITHUB_APP_PRIVATE_KEY_PATH}
+      - GITHUB_BOT_TOKEN=${GITHUB_BOT_TOKEN}
+      - GITHUB_APP_SLUG=${GITHUB_APP_SLUG}
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - GROQ_API_KEY=${GROQ_API_KEY}
+      - AI_PROVIDER=${AI_PROVIDER}
+      - QDRANT_DB=${QDRANT_DB}
+      - QDRANT_API_KEY=${QDRANT_API_KEY}
+      - TEMP_REPO_DIR=/app/temo_repos
+    volumes:
+      - ./temp_repos:/app/temp_repos
+    restart: unless-stopped
+
+networks:
+  default:
+    name: brainly-bot

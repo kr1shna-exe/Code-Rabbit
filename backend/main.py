@@ -2,6 +2,7 @@ from contextlib import asynccontextmanager
 
 import uvicorn
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
 from src.db.embedding_raw_context import EmbeddingService
 from src.db.index import initialize_collections
@@ -29,6 +30,14 @@ async def init(app: FastAPI):
 
 
 app = FastAPI(title="CodeRabbit Test", lifespan=init)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 app.include_router(webhook_router, prefix="/api")
 

@@ -13,13 +13,10 @@ class RepoManager:
 
         # Clean up existing directory if it exists
         if pr_dir.exists():
-            print(f"Cleaning up existing directory: {pr_dir}")
             import shutil
             shutil.rmtree(pr_dir)
 
-        print(f"Cloning the main branch..")
         repo = Repo.clone_from(repo_url, pr_dir, branch=base_branch)
-        print(f"Fetching {head_branch}..")
         origin = repo.remote('origin')
         origin.fetch(head_branch)
         repo.git.checkout(f"origin/{head_branch}")
@@ -68,6 +65,10 @@ class RepoManager:
         repo = Repo(repo_path)
         return repo.git.show(f"origin/{branch}:{file_path}")
 
-    def clean_up(self, repo_path: str):
+    def clean_up(self, repo_path):
+        """Clean up cloned repository directory"""
+        if not isinstance(repo_path, Path):
+            repo_path = Path(repo_path)
+
         if repo_path.exists():
             shutil.rmtree(repo_path)

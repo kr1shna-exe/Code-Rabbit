@@ -3,7 +3,7 @@ import hmac
 import json
 from typing import Any, Dict, Optional, cast
 
-from fastapi import APIRouter, Depends, Header, HTTPException, Request
+from fastapi import APIRouter, BackgroundTasks, Depends, Header, HTTPException, Request
 
 from ai.multi_agent_reviewer import review_code_with_multi_agents
 from db.vector_indexer import VectorIndexer
@@ -24,6 +24,14 @@ async def health_check():
     return {"status": "healthy", "service": "code-rabbit"}
 
 
+@router.get("/github-app-info")
+async def get_github_app_info():
+    return {
+        "installation_url": f"https://github.com/apps/{settings.github_app_slug}/installations/new",
+        "app_slug": settings.github_app_slug,
+    }
+
+
 def get_vector_indexer(request: Request) -> VectorIndexer:
     return request.app.state.vector_indexer
 
@@ -37,30 +45,23 @@ def verify_signature(payload: Any, signature: Optional[str]):
     return hmac.compare_digest(f"sha256={mac.hexdigest()}", signature)
 
 
-@router.post("/webhook")
-async def github_webhook(
-    request: Request,
-    vector_indexer: VectorIndexer = Depends(get_vector_indexer),
-    x_hub_signature_256: Optional[str] = Header(None, alias="X-Hub-Signature-256"),
-    x_github_event: Optional[str] = Header(None, alias="X-GitHub-Event"),
+async def process_webhook_background(
+    payload: Dict[str, Any],
+    vector_indexer: VectorIndexer,
 ):
-    payload = await request.body()
-    if not verify_signature(payload, x_hub_signature_256):
-        raise HTTPException(status_code=401, detail="Invalid signature")
-    payload = json.loads(payload.decode("utf-8"))
-    if x_github_event != "pull_request":
-        return {"status": "skipped", "event": x_github_event}
-    action = payload.get("action", "")
-    pr = payload.get("pull_request", {})
-    repo = payload.get("repository", {})
-    installation_id = payload.get("installation", {}).get("id")
-    pr_number = pr.get("number")
-    pr_title = pr.get("title", "")
-    repo_url = repo.get("clone_url", "")
-    repo_full_name = repo.get("full_name", "")
-    base_branch = pr.get("base", {}).get("ref", "main")
-    head_branch = pr.get("head", {}).get("ref", "")
+    """Process webhook in background to avoid timeout"""
     try:
+        action = payload.get("action", "")
+        pr = payload.get("pull_request", {})
+        repo = payload.get("repository", {})
+        installation_id = payload.get("installation", {}).get("id")
+        pr_number = pr.get("number")
+        pr_title = pr.get("title", "")
+        repo_url = repo.get("clone_url", "")
+        repo_full_name = repo.get("full_name", "")
+        base_branch = pr.get("base", {}).get("ref", "main")
+        head_branch = pr.get("head", {}).get("ref", "")
+
         repo_path = repo_manager.clone_and_setup_repo(
             repo_url=repo_url,
             pr_number=pr_number,
@@ -71,10 +72,9 @@ async def github_webhook(
         diff_data = repo_manager.get_diff(
             repo_path=repo_path, base_branch=base_branch, head_branch=head_branch
         )
-        print("Successfully got diff")
+
         parser = SimpleASTParser(language="python")
         for file_path in diff_data.get("diff_files", []):
-            print(f"Processing file: {file_path}")
             if file_path.endswith(".py"):
                 try:
                     full_path = f"{repo_path}/{file_path}"
@@ -102,12 +102,10 @@ async def github_webhook(
                 except Exception as e:
                     print(f"Error processing file {file_path}: {e}")
                     continue
-        print("Successfully processed all files")
 
         try:
             history_fetcher = HistoryFetcher()
             pr_history = history_fetcher.fetch_pr_context(repo_full_name, pr_number)
-            print("Successfully fetched PR history")
         except Exception as e:
             print(f"Error fetching PR history: {e}")
             # Create minimal PR history to continue processing
@@ -135,11 +133,9 @@ async def github_webhook(
             comprehensive_context = context_builder.build_comprehensive_context(
                 diff_data=diff_data, pr_history=pr_history, repo_path=repo_path
             )
-            print("Successfully built comprehensive context")
         except Exception as e:
-            raise HTTPException(
-                status_code=500, detail=f"Context building failed: {str(e)}"
-            )
+            print(f"Context building failed: {str(e)}")
+            return
 
         try:
             ai_review = await review_code_with_multi_agents(
@@ -149,7 +145,6 @@ async def github_webhook(
                 pr_data=payload,
                 diff_data=diff_data,
             )
-            print("Successfully generated AI review")
         except Exception as e:
             print(f"Error generating AI review: {e}")
             ai_review = f"Error generating review: {str(e)}"
@@ -227,7 +222,6 @@ async def github_webhook(
                         user_feedback=None,
                         code_context=comprehensive_context,
                     )
-                print("Successfully indexed learnings")
             except Exception as e:
                 print(f"Error indexing learnings: {e}")
 
@@ -273,16 +267,63 @@ async def github_webhook(
                     pr_number=pr_number,
                     ai_review=ai_review,
                 )
-            print("Successfully posted comments to GitHub")
 
         except Exception as e:
-             print(f"Error posting bot comment: {e}")
-        return {
-            "status": "success",
-            "prn_number": pr_number,
-            "files_changed": len(diff_data["diff_files"]),
-            "changed_files": diff_data["diff_files"],
-        }
+            print(f"Error posting review to GitHub: {e}")
+
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        print(f"Error processing webhook: {str(e)}")
+        import traceback
+        traceback.print_exc()
+    finally:
+        # Always cleanup the cloned repository
+        try:
+            if 'repo_path' in locals() and repo_path:
+                repo_manager.clean_up(repo_path)
+        except Exception as e:
+            print(f"Error cleaning up repository: {e}")
+
+
+@router.post("/webhook")
+async def github_webhook(
+    request: Request,
+    background_tasks: BackgroundTasks,
+    vector_indexer: VectorIndexer = Depends(get_vector_indexer),
+    x_hub_signature_256: Optional[str] = Header(None, alias="X-Hub-Signature-256"),
+    x_github_event: Optional[str] = Header(None, alias="X-GitHub-Event"),
+):
+    """
+    GitHub webhook endpoint - returns immediately and processes in background
+    """
+    # Validate signature
+    payload = await request.body()
+    if not verify_signature(payload, x_hub_signature_256):
+        raise HTTPException(status_code=401, detail="Invalid signature")
+
+    # Parse payload
+    payload_dict = json.loads(payload.decode("utf-8"))
+
+    # Only process pull_request events
+    if x_github_event != "pull_request":
+        return {"status": "skipped", "event": x_github_event}
+
+    # Extract basic info for response
+    pr_number = payload_dict.get("pull_request", {}).get("number")
+    pr_title = payload_dict.get("pull_request", {}).get("title", "")
+    action = payload_dict.get("action", "")
+
+    # Queue background task
+    background_tasks.add_task(
+        process_webhook_background,
+        payload_dict,
+        vector_indexer
+    )
+
+    # Return immediately (before timeout)
+    return {
+        "status": "accepted",
+        "message": "Processing webhook in background",
+        "pr_number": pr_number,
+        "action": action
+    }
 

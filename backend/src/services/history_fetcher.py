@@ -135,9 +135,7 @@ class HistoryFetcher:
             if repo.owner.login not in maintainers:
                 maintainers.append(repo.owner.login)
 
-            print(f"Found maintainers: {maintainers}")
             return maintainers
 
         except Exception as e:
-            print(f"Error fetching maintainers: {e}")
             return [repo.owner.login] if repo.owner else []

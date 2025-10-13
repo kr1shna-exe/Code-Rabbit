@@ -1,8 +1,21 @@
-import Text from "../Effects/Text";
-import { BackgroundGradients } from "../Effects/BackgroundGradients";
+"use client";
+
 import { Arrow, Rocket, Star } from "@/Effects/Icons";
+import { useEffect, useState } from "react";
+import { BackgroundGradients } from "../Effects/BackgroundGradients";
+import Text from "../Effects/Text";
 
 export default function Navbar() {
+  const [installationUrl, setInstallationUrl] = useState<string>("");
+
+  useEffect(() => {
+    const backendUrl =
+      process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8000";
+    fetch(`${backendUrl}/api/github-app-info`)
+      .then((res) => res.json())
+      .then((data) => setInstallationUrl(data.installation_url))
+      .catch((err) => console.error("Failed to fetch GitHub App info:", err));
+  }, []);
   return (
     <div className="relative w-full min-h-screen overflow-hidden">
       <BackgroundGradients />
@@ -38,17 +51,24 @@ export default function Navbar() {
         <div className="relative mt-20 flex items-center justify-center w-full max-w-4xl">
           <div className="absolute -left-14 md:left-0 top-1/2 w-[30%] h-px bg-gradient-to-r from-transparent to-white/100" />
           <div className="rounded-3xl shadow-[inset_0.21887646615505219px_0.3647941052913666px_2.9183528423309326px_0px_rgba(3,78,78,1.00)] outline-8 outline-white/20 ">
-            <button className="px-3 py-4 bg-white cursor-pointer rounded-3xl shadow-[inset_0px_12px_8px_0px_rgba(174,203,192,1)] flex items-center hover:scale-105 transition-all duration-300 gap-6">
-              <div className="relative">
-                <Star />
-              </div>
-              <span className="text-black text-lg font-Montserrat font-medium">
-                Start Now
-              </span>
-              <div className="relative">
-                <Arrow />
-              </div>
-            </button>
+            <a
+              href={installationUrl || "#"}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={!installationUrl ? "pointer-events-none" : ""}
+            >
+              <button className="px-3 py-4 bg-white cursor-pointer rounded-3xl shadow-[inset_0px_12px_8px_0px_rgba(174,203,192,1)] flex items-center hover:scale-105 transition-all duration-300 gap-6">
+                <div className="relative">
+                  <Star />
+                </div>
+                <span className="text-black text-lg font-Montserrat font-medium">
+                  Start Now
+                </span>
+                <div className="relative">
+                  <Arrow />
+                </div>
+              </button>
+            </a>
           </div>
           <div className="absolute -right-14 md:right-0 top-1/2 w-[30%] h-px bg-gradient-to-l from-transparent to-white/100" />
         </div>
