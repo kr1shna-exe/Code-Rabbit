@@ -1,7 +1,6 @@
-import os, shutil
+import shutil
 from pathlib import Path
 from git import Repo
-from typing import Dict,List
 
 class RepoManager:
     def __init__(self, temp_dir: str):

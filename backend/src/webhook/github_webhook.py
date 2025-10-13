@@ -51,7 +51,6 @@ async def process_webhook_background(
 ):
     """Process webhook in background to avoid timeout"""
     try:
-        action = payload.get("action", "")
         pr = payload.get("pull_request", {})
         repo = payload.get("repository", {})
         installation_id = payload.get("installation", {}).get("id")
@@ -307,7 +306,6 @@ async def github_webhook(
 
     # Extract basic info for response
     pr_number = payload_dict.get("pull_request", {}).get("number")
-    pr_title = payload_dict.get("pull_request", {}).get("title", "")
     action = payload_dict.get("action", "")
 
     if action in ["closed"]:

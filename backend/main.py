@@ -25,7 +25,7 @@ async def init(app: FastAPI):
     vector_indexer = VectorIndexer(embedding_service)
     app.state.embedding_service = embedding_service
     app.state.vector_indexer = vector_indexer
-    print(f"Successfully initiated")
+    print("Successfully initiated")
     yield
 
 

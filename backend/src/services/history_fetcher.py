@@ -137,5 +137,5 @@ class HistoryFetcher:
 
             return maintainers
 
-        except Exception as e:
+        except Exception:
             return [repo.owner.login] if repo.owner else []

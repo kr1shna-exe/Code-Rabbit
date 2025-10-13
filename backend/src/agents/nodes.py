@@ -1,4 +1,3 @@
-from db import vector_indexer
 from db.embedding_raw_context import EmbeddingService
 from db.vector_indexer import VectorIndexer
 

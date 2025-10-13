@@ -1,5 +1,5 @@
 import os
-from typing import Dict, List, Optional
+from typing import List, Optional
 
 from fastapi import HTTPException
 from github import Auth, Github

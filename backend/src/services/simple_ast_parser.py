@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Tuple
 
 import tree_sitter_go as tsgo
 import tree_sitter_javascript as tsjs

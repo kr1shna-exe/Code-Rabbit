@@ -1,6 +1,6 @@
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 from .simple_ast_parser import LANGUAGE_MAP, LANGUAGE_MODULES, SimpleASTParser
 from .simple_semantics import build_simple_graph
@@ -89,7 +89,8 @@ class SimpleContextBuilder:
                             content[:500] + "..." if len(content) > 500 else content
                         )
                         context_parts.append(preview)
-                except:
+                except Exception as e:
+                    print(f"Warning: Could not read file content: {e}")
                     context_parts.append("Could not read file content")
 
                 context_parts.append("\n```")
@@ -194,7 +195,7 @@ class SimpleContextBuilder:
 
         # Add graph insights
         if graph_insights:
-            analysis += f"\n### Code Graph Analysis\n"
+            analysis += "\n### Code Graph Analysis\n"
             analysis += (
                 f"- **Functions found**: {graph_insights.get('function_count', 0)}\n"
             )

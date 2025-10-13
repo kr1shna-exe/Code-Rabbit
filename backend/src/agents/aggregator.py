@@ -212,13 +212,12 @@ def build_severity_grouped_section(issues: List[ParsedIssue], section_type: str)
     # Add alert box at the top
     total_count = len(issues)
     critical_count = len(severity_groups["CRITICAL"])
-    medium_count = len(severity_groups["MEDIUM"])
 
     if critical_count > 0:
-        section_parts.append(f"\n> [!WARNING]")
+        section_parts.append("\n> [!WARNING]")
         section_parts.append(f"> Found {total_count} {section_type.lower()} issue{'s' if total_count != 1 else ''} that need attention before merging.\n")
     else:
-        section_parts.append(f"\n> [!CAUTION]")
+        section_parts.append("\n> [!CAUTION]")
         section_parts.append(f"> Found {total_count} {section_type.lower()} issue{'s' if total_count != 1 else ''} to review.\n")
 
     first_section = True
@@ -262,7 +261,7 @@ def build_severity_grouped_section(issues: List[ParsedIssue], section_type: str)
     # Add tip at the end
     if critical_count > 0:
         section_parts.append("\n> [!TIP]")
-        section_parts.append(f"> Fix CRITICAL issues before merging to production.\n")
+        section_parts.append("> Fix CRITICAL issues before merging to production.\n")
 
     return "\n".join(section_parts)
 
@@ -282,7 +281,7 @@ def build_summary_review(
 
     total_issues = len(security_issues) + len(performance_issues) + len(issues_by_file)
 
-    review_parts.append(f"## Code Review\n")
+    review_parts.append("## Code Review\n")
 
     if failed_agents:
         review_parts.append(f"*Note: {', '.join(failed_agents)} analysis failed*\n")
