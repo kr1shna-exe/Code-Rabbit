@@ -1,5 +1,5 @@
 "use client";
-import { motion, AnimatePresence } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { useState } from "react";
 
 export default function FAQ() {
@@ -17,22 +17,22 @@ export default function FAQ() {
 
   const faqData = [
     {
-      question: "How does your AI understand my entire codebase?",
+      question: "How does automated PR review work?",
       answer:
-        "Our AI uses advanced code analysis techniques to parse and understand your entire codebase structure, dependencies, and relationships between different components. It creates a comprehensive knowledge graph that allows for context-aware assistance.",
+        "When you open a pull request, our AI automatically analyzes your code changes within minutes. It creates a knowledge graph of your codebase, runs 40+ linters, maps dependencies, and generates line-by-line feedback with security findings and improvement suggestions—all without manual triggers.",
     },
     {
       question: "Is my code safe and private?",
       answer:
-        "Absolutely. Your code is processed securely and never stored permanently on our servers. We use industry-standard encryption and privacy measures to ensure your intellectual property remains protected at all times.",
+        "Your code is processed securely and shared only with trusted AI providers for review purposes. We never use your code to train models. You can opt out of data storage entirely, and we maintain complete data isolation with SOC2-compliant security measures and industry-standard encryption.",
     },
     {
       question: "What programming languages and frameworks are supported?",
       answer:
-        "We support a wide range of programming languages including JavaScript, TypeScript, Python, Java, C++, React, Vue, Angular, Node.js, Django, and many more. Our AI is continuously updated to support new technologies.",
+        "We support a wide range of programming languages including JavaScript, TypeScript, Python, C, rust and many more later on. Our AI is continuously updated to support new technologies.",
     },
     {
-      question: "Can I use this tool with my existing workflow?",
+      question: "Can I customize reviews for my team's coding standards?",
       answer:
         "Yes! Our tool integrates seamlessly with popular IDEs, version control systems, and development workflows. You can continue using your favorite tools while getting AI-powered assistance throughout your development process.",
     },

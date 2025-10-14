@@ -13,7 +13,9 @@ export default function Navbar() {
       process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8000";
     fetch(`${backendUrl}/api/github-app-info`)
       .then((res) => res.json())
-      .then((data) => setInstallationUrl(data.installation_url))
+      .then((data) => {
+        setInstallationUrl(data.installation_url);
+      })
       .catch((err) => console.error("Failed to fetch GitHub App info:", err));
   }, []);
   return (
