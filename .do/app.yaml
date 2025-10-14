@@ -12,15 +12,15 @@ services:
 
     image:
       registry_type: GHCR
-      repository: kr1shna-exe/codeboss/backend
+      repository: ghcr.io/kr1shna-exe/codeboss/backend
       tag: main
-      registry:
-        server: ghcr.io
-        username: kr1shna-exe
-        password: ${GITHUB_DO_TOKEN}
+      # registry:
+      #   server: ghcr.io
+      #   username: kr1shna-exe
+      #   password: ${GITHUB_DO_TOKEN}
 
     envs:
-      - key: GITHUB_WEBBHOOK_SECRET
+      - key: GITHUB_WEBHOOK_SECRET
         value: ${GITHUB_WEBHOOK_SECRET}
         type: SECRET
       - key: GITHUB_APP_ID
