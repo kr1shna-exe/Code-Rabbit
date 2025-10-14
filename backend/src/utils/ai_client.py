@@ -1,9 +1,8 @@
 import asyncio
-from typing import Optional
+from typing import Optional, List
 
 import google.generativeai as genai
 from groq import Groq
-from zai import ZaiClient
 
 from utils.config import settings
 
@@ -18,9 +17,6 @@ class AIClient:
         if self.provider == "gemini":
             genai.configure(api_key=settings.gemini_api_key)
             self.model_name = "gemini-2.0-flash-exp"
-        elif self.provider == "zai":
-            self.client = ZaiClient(api_key=settings.zai_api_key)
-            self.model_name = "glm-4.6"  # GLM-4.6 model for code review
         elif self.provider == "groq":
             self.client = Groq(api_key=settings.groq_api_key)
             self.model_name = "llama-3.3-70b-versatile"  # Fast and capable
@@ -55,6 +51,23 @@ class AIClient:
             messages=[{"role": "user", "content": prompt}],
         )
         return response.choices[0].message.content
+    
+    async def generate_embedding(self, text: str) -> List[float]:
+        if self.provider == "gemini":
+            return await self._generate_gemini_embedding(text)
+        elif self.provider == "groq":
+            return await self._generate_gemini_embedding(text)
+        else:
+            raise ValueError(f"Embeddings not supported for provider: {self.provider}")
+    
+    async def _generate_gemini_embedding(self, text: str) -> List[float]:
+        result = await asyncio.to_thread(
+            genai.embed_content,
+            model="models/text-embedding-004",
+            content=text,
+            task_type="retrieval_document"
+        )
+        return result['embedding']
 
     def get_provider_info(self) -> dict:
         return {"provider": self.provider, "model": self.model_name}

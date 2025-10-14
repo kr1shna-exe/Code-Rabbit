@@ -2,7 +2,7 @@ from qdrant_client.models import Distance, VectorParams, PayloadSchemaType
 
 from utils.qdrant_client import qdrant_client
 
-VECTOR_SIZE = 384
+VECTOR_SIZE = 768
 COLLECTIONS = {
     "code_graphs": {
         "description": "Code structure graphs with functions, classes and calls",

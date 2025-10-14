@@ -29,7 +29,7 @@ services:
         value: ${GITHUB_BOT_TOKEN}
         type: SECRET
       - key: GITHUB_TOKEN
-        value: ${{GITHUB_TOKEN}}
+        value: ${GITHUB_TOKEN}
         type: SECRET
       - key: GITHUB_APP_SLUG
         value: ${{GITHUB_APP_SLUG}}

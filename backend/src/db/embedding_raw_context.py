@@ -1,27 +1,37 @@
 from typing import Any, Dict, List
-
-from sentence_transformers import SentenceTransformer
-
+import asyncio
+import concurrent.futures
+from utils.ai_client import AIClient
+# from sentence_transformers import SentenceTransformer
 
 class EmbeddingService:
 
-    def __init__(self, model_name: str = "BAAI/bge-small-en-v1.5"):
-        self.model = SentenceTransformer(model_name)
-        self.embedding_dim = self.model.get_sentence_embedding_dimension()
-        print(f"Model loaded: {self.embedding_dim}")
+    def __init__(self):
+        self.ai_client = AIClient(provider="gemini")
+        self.embedding_dim = 768
+        self._executor = concurrent.futures.ThreadPoolExecutor(max_workers=5)
+        print(f"Gemini Embeddings loaded: {self.embedding_dim}")
 
     def embed_text(self, text: str):
         if not text or not text.strip():
             return [0.0] * self.embedding_dim
-        embedding = self.model.encode(text, convert_to_numpy=True)
-        return embedding.tolist()
+        future = self._executor.submit(self._embed_sync, text)
+        return future.result()
+    
+    def _embed_sync(self, text: str):
+        return asyncio.run(self.ai_client.generate_embedding(text))
 
     def embed_batch(self, texts: List[str]):
         valid_texts = [t if t and t.strip() else " " for t in texts]
-        embeddings = self.model.encode(
-            valid_texts, batch_size=32, show_progress_bar=True, convert_to_numpy=True
-        )
-        return embeddings.tolist()
+        
+        future = self._executor.submit(self._embed_batch_sync, valid_texts)
+        return future.result()
+    
+    def _embed_batch_sync(self, texts: List[str]):
+        async def batch_embed():
+            tasks = [self.ai_client.generate_embedding(t) for t in texts]
+            return await asyncio.gather(*tasks)
+        return asyncio.run(batch_embed())
 
     def embed_code_graph(self, graph_data: Dict[str, Any]):
         content = f"""

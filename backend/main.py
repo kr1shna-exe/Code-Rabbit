@@ -20,7 +20,7 @@ async def init(app: FastAPI):
     print("Initializing VectorDB")
     initialize_collections()
     print("Loading embedding model")
-    embedding_service = EmbeddingService(model_name="BAAI/bge-small-en-v1.5")
+    embedding_service = EmbeddingService()
     print("Loading vector indexer")
     vector_indexer = VectorIndexer(embedding_service)
     app.state.embedding_service = embedding_service
