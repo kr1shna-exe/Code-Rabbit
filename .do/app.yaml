@@ -12,8 +12,12 @@ services:
 
     image:
       registry_type: GHCR
-      repository: kr1shna-exe/CodeBoss/backend
+      repository: kr1shna-exe/codeboss/backend
       tag: main
+      registry:
+        server: ghcr.io
+        username: kr1shna-exe
+        password: ${GITHUB_DO_TOKEN}
 
     envs:
       - key: GITHUB_WEBBHOOK_SECRET
@@ -32,22 +36,22 @@ services:
         value: ${GITHUB_TOKEN}
         type: SECRET
       - key: GITHUB_APP_SLUG
-        value: ${{GITHUB_APP_SLUG}}
+        value: ${GITHUB_APP_SLUG}
         type: SECRET
       - key: QDRANT_DB
-        value: ${{QDRANT_DB}}
+        value: ${QDRANT_DB}
         type: SECRET
       - key: QDRANT_API_KEY
-        value: ${{QDRANT_API_KEY}}
+        value: ${QDRANT_API_KEY}
         type: SECRET
       - key: AI_MODEL
-        value: ${{AI_MODEL}}
+        value: ${AI_MODEL}
         type: GENERAL
       - key: GROQ_API_KEY
-        value: ${{GROQ_API_KEY}}
+        value: ${GROQ_API_KEY}
         type: SECRET
       - key: GEMINI_API_KEY
-        value: ${{GEMINI_API_KEY}}
+        value: ${GEMINI_API_KEY}
         type: SECRET
       - key: TEMP_REPO_DIR
         value: "/tmp/repos"
