@@ -12,7 +12,7 @@ services:
 
     image:
       registry_type: GHCR
-      repository: kr1shna-exe/codeboss/backend
+      repository: kr1shna-exe/CodeBoss/backend
       tag: main
 
     envs:
