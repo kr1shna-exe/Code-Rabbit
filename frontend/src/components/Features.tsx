@@ -68,9 +68,8 @@ export default function Features() {
                           Full-Project Understanding
                         </h3>
                         <p className="text-xs sm:text-sm lg:text-sm max-w-[85%] font-light font-'Montserrat' text-white leading-relaxed">
-                          No more context limits. Upload your entire codebase
-                          and let AI understand every file, dependency, and
-                          relationship.
+                          Install and let our AI understand your entire codebase
+                          and every file, dependency, and relationship.
                         </p>
                       </div>
                     </div>
@@ -92,8 +91,8 @@ export default function Features() {
                           Context-Aware Code Generation
                         </h3>
                         <p className="text-xs sm:text-sm lg:text-sm max-w-[85%] font-light font-'Montserrat' text-white leading-relaxed">
-                          Generate new features and get suggestions with full
-                          awareness of your project&apos;s context.
+                          Reviews your code changes and get suggestions with
+                          full awareness of your project&apos;s context.
                         </p>
                       </div>
                     </div>
@@ -116,7 +115,7 @@ export default function Features() {
                         </h3>
                         <p className="text-sm sm:text-base lg:text-sm max-w-[96%] font-light font-'Montserrat' text-white leading-relaxed">
                           Debug complex issues that span multiple files and
-                          modules. The AI traces bugs and logic across your
+                          modules. Our AI traces bugs and logic across your
                           whole project, saving you hours of manual searching.
                         </p>
                       </div>

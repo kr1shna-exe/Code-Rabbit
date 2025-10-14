@@ -24,17 +24,17 @@ export default function FAQ() {
     {
       question: "Is my code safe and private?",
       answer:
-        "Your code is processed securely and shared only with trusted AI providers for review purposes. We never use your code to train models. You can opt out of data storage entirely, and we maintain complete data isolation with SOC2-compliant security measures and industry-standard encryption.",
+        "Your code is processed securely and shared only with trusted AI providers for review purposes. We never use your code to train any AI models.",
     },
     {
       question: "What programming languages and frameworks are supported?",
       answer:
-        "We support a wide range of programming languages including JavaScript, TypeScript, Python, C, rust and many more later on. Our AI is continuously updated to support new technologies.",
+        "We support a wide range of programming languages including JavaScript, TypeScript, Python, C, Rust and many more later on. Our AI is continuously updated to support new technologies.",
     },
     {
-      question: "Can I customize reviews for my team's coding standards?",
+      question: "How does this fit into my existing development workflow?",
       answer:
-        "Yes! Our tool integrates seamlessly with popular IDEs, version control systems, and development workflows. You can continue using your favorite tools while getting AI-powered assistance throughout your development process.",
+        "Install our GitHub app in minutes and reviews start automatically on every PR. Interact with the AI directly in PR comments, get AI-generated summaries",
     },
   ];
 

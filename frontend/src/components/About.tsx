@@ -38,7 +38,7 @@ export default function About() {
               </div>
             </div>
             <span className="text-2xl sm:text-4xl lg:text-6xl font-normal font-'Montserrat' bg-clip-text bg-gray-500 text-transparent leading-relaxed">
-              Ship
+              Merge
             </span>
           </div>
         </div>
@@ -68,10 +68,9 @@ export default function About() {
                     Connect Your Repository
                   </h3>
                   <p className="text-white font-light font-'Montserrat' text-base sm:text-lg lg:text-xl leading-relaxed">
-                    Link your GitHub, GitLab, or Bitbucket repository in
-                    seconds. CodeRabbit automatically monitors pull requests and
-                    begins analyzing code changes the moment a PR is created or
-                    update
+                    Link your GitHub repository in seconds. BrainlyBot
+                    automatically monitors pull requests and begins analyzing
+                    code changes the moment a PR is created or update
                   </p>
                 </div>
               </div>
