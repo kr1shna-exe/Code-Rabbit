@@ -13,7 +13,7 @@ class RepoManager:
     def clone_and_setup_repo(
         self, repo_url: str, pr_number: int, head_branch: str, base_branch: str
     ):
-        repo_hash = hashlib.sha1(repo_url.encode()).hexdigest()[:8]
+        repo_hash = hashlib.sha1(repo_url.encode(), usedforsecurity=False).hexdigest()[:8]
         pr_dir = self.temp_dir / f"{repo_hash}_pr_{pr_number}"
         if pr_dir.exists():
             try:
