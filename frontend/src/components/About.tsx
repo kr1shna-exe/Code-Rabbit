@@ -1,9 +1,9 @@
 import Image from "next/image";
-import { LineEffect } from "../Effects/Design";
 import {
-  TopStarEffect,
   BottomStarEffect,
+  TopStarEffect,
 } from "../Effects/BackgroundGradients";
+import { LineEffect } from "../Effects/Design";
 export default function About() {
   return (
     <div
@@ -30,7 +30,7 @@ export default function About() {
           </div>
           <div className="flex items-center justify-center gap-2 sm:gap-4">
             <span className="text-2xl sm:text-4xl lg:text-6xl  font-normal font-'Montserrat' bg-clip-text bg-white leading-relaxed">
-              Upload To
+              Pull Request To
             </span>
             <div className="px-2 lg:px-2">
               <div className="max-w-[25px] md:max-w-[40px] lg:max-w-[60px]">
@@ -38,7 +38,7 @@ export default function About() {
               </div>
             </div>
             <span className="text-2xl sm:text-4xl lg:text-6xl font-normal font-'Montserrat' bg-clip-text bg-gray-500 text-transparent leading-relaxed">
-              Insight
+              Ship
             </span>
           </div>
         </div>
@@ -65,13 +65,13 @@ export default function About() {
                 </div>
                 <div className="text-left">
                   <h3 className="text-xl sm:text-2xl lg:text-3xl font-medium font-'Montserrat' mb-4 sm:mb-8 bg-clip-text text-transparent bg-gradient-to-r from-white from-40% to-gray-500 to-70%">
-                    Upload Your Codebase
+                    Connect Your Repository
                   </h3>
                   <p className="text-white font-light font-'Montserrat' text-base sm:text-lg lg:text-xl leading-relaxed">
-                    Drag and drop your entire project folder or connect your
-                    repository in seconds. Our smart indexing ensures every
-                    file, dependency, and relationship is mapped for instant
-                    understanding.
+                    Link your GitHub, GitLab, or Bitbucket repository in
+                    seconds. CodeRabbit automatically monitors pull requests and
+                    begins analyzing code changes the moment a PR is created or
+                    update
                   </p>
                 </div>
               </div>
@@ -90,13 +90,13 @@ export default function About() {
                 </div>
                 <div className="text-left">
                   <h3 className="text-xl sm:text-2xl lg:text-3xl font-medium font-'Montserrat' mb-4 sm:mb-7 bg-clip-text text-transparent bg-gradient-to-r from-white from-40% to-gray-500 to-70%">
-                    Ask Anything, Anytime
+                    Automated Code Review
                   </h3>
                   <p className="text-white font-light font-'Montserrat' text-base sm:text-lg lg:text-xl leading-relaxed">
-                    Interact naturally with your AI assistant. Whether you need
-                    help implementing a feature, understanding code, or
-                    debugging, just ask—no need to reference specific files or
-                    lines.
+                    Receive comprehensive code reviews within minutes of
+                    creating a pull request. Get context-aware feedback,
+                    security findings, and improvement suggestions across your
+                    entire codebase—no manual review requests needed
                   </p>
                 </div>
               </div>
@@ -115,13 +115,12 @@ export default function About() {
                 </div>
                 <div className="text-left">
                   <h3 className="text-xl sm:text-2xl lg:text-3xl font-medium font-'Montserrat' mb-4 sm:mb-8 bg-clip-text text-transparent bg-gradient-to-r from-white from-40% to-gray-500 to-70%">
-                    Contextual Answers
+                    One-Click Fixes & Insights
                   </h3>
                   <p className="text-white font-light font-'Montserrat' text-base sm:text-lg lg:text-xl leading-relaxed">
-                    Receive detailed answers, code suggestions, and explanations
-                    that consider your entire codebase. AI understands
-                    cross-file relationships and dependencies for truly holistic
-                    support.
+                    Apply suggested improvements directly with committable code
+                    fixes. Get AI-generated PR summaries, sequence diagrams
+                    showing architectural impact, and security analysis
                   </p>
                 </div>
               </div>
@@ -140,12 +139,13 @@ export default function About() {
                 </div>
                 <div className="text-left">
                   <h3 className="text-xl sm:text-2xl lg:text-3xl font-medium font-'Montserrat' mb-4 sm:mb-7 bg-clip-text text-transparent bg-gradient-to-r from-white from-40% to-gray-500 to-70%">
-                    Iterate and Collaborate
+                    Chat, Learn, and Refine
                   </h3>
                   <p className="text-white font-light font-'Montserrat' text-base sm:text-lg lg:text-xl leading-relaxed">
-                    Refine your queries, explore alternative solutions, and
-                    collaborate with the AI to accelerate your workflow. Get
-                    instant feedback and iterate until you&apos;re satisfied.
+                    Interact directly in PR comments. Ask questions about
+                    changes, provide feedback on review and watch it learn your
+                    team’s preferences. Every interaction improves future
+                    reviews across your repositories
                   </p>
                 </div>
               </div>
