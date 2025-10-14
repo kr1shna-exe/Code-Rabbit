@@ -51,7 +51,9 @@ export default function Footer() {
                       href={installationUrl || "#"}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className={!installationUrl ? "pointer-events-none" : ""}
+                      onClick={(e) => {
+                        if (!installationUrl) e.preventDefault();
+                      }}
                     >
                       <button className="px-6 py-4 cursor-pointer bg-white rounded-4xl shadow-[inset_0px_12px_8px_0px_rgba(174,203,192,1)] flex items-center gap-6  transition-transform">
                         <span className="text-black text-lg font-'Montserrat' font-medium">
