@@ -1,8 +1,17 @@
-import { Arrow } from "@/Effects/Icons";
+"use client";
+import { Arrow, Github, LinkedIn, X } from "@/Effects/Icons";
 import Image from "next/image";
-import { LinkedIn, Github, X } from "@/Effects/Icons";
-
+import { useEffect, useState } from "react";
 export default function Footer() {
+  const [installationUrl, setInstallationUrl] = useState<string>("");
+
+  useEffect(() => {
+    const backendUrl =
+      process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8000";
+    fetch(`${backendUrl}/api/github-app-info`)
+      .then((res) => res.json())
+      .then((data) => setInstallationUrl(data.installation_url));
+  });
   return (
     <footer className="relative w-full">
       <div className="relative bg-gradient-to-b from-[#073d3d33] to-[#00000033] rounded-[30px] py-1 -mx-4">
@@ -38,14 +47,21 @@ export default function Footer() {
                 </div>
                 <div className="relative">
                   <div className="absolute cursor-pointer rounded-4xl shadow-[inset_0.21887646615505219px_0.3647941052913666px_2.9183528423309326px_0px_rgba(3,78,78,1.00)] outline-8 outline-white/20 ">
-                    <button className="px-6 py-4 cursor-pointer bg-white rounded-4xl shadow-[inset_0px_12px_8px_0px_rgba(174,203,192,1)] flex items-center gap-6  transition-transform">
-                      <span className="text-black text-lg font-'Montserrat' font-medium">
-                        Start Now
-                      </span>
-                      <div className="relative">
-                        <Arrow />
-                      </div>
-                    </button>
+                    <a
+                      href={installationUrl || "#"}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={!installationUrl ? "pointer-events-none" : ""}
+                    >
+                      <button className="px-6 py-4 cursor-pointer bg-white rounded-4xl shadow-[inset_0px_12px_8px_0px_rgba(174,203,192,1)] flex items-center gap-6  transition-transform">
+                        <span className="text-black text-lg font-'Montserrat' font-medium">
+                          Start Now
+                        </span>
+                        <div className="relative">
+                          <Arrow />
+                        </div>
+                      </button>
+                    </a>
                   </div>
                 </div>
                 <div className="pt-24 md:pt-18 lg:translate-y-[30px]">
