@@ -215,10 +215,14 @@ def build_severity_grouped_section(issues: List[ParsedIssue], section_type: str)
 
     if critical_count > 0:
         section_parts.append("\n> [!WARNING]")
-        section_parts.append(f"> Found {total_count} {section_type.lower()} issue{'s' if total_count != 1 else ''} that need attention before merging.\n")
+        section_parts.append(
+            f"> Found {total_count} {section_type.lower()} issue{'s' if total_count != 1 else ''} that need attention before merging.\n"
+        )
     else:
         section_parts.append("\n> [!CAUTION]")
-        section_parts.append(f"> Found {total_count} {section_type.lower()} issue{'s' if total_count != 1 else ''} to review.\n")
+        section_parts.append(
+            f"> Found {total_count} {section_type.lower()} issue{'s' if total_count != 1 else ''} to review.\n"
+        )
 
     first_section = True
     for severity in ["CRITICAL", "MEDIUM"]:
@@ -234,7 +238,9 @@ def build_severity_grouped_section(issues: List[ParsedIssue], section_type: str)
         # Add emoji and count to header
         emoji = "🔴" if severity == "CRITICAL" else "⚠️"
         count = len(severity_issues)
-        section_parts.append(f"### {emoji} {severity} ({count} issue{'s' if count != 1 else ''})\n")
+        section_parts.append(
+            f"### {emoji} {severity} ({count} issue{'s' if count != 1 else ''})\n"
+        )
 
         # Create impact summary
         descriptions = [issue.description for issue in severity_issues]
@@ -255,7 +261,9 @@ def build_severity_grouped_section(issues: List[ParsedIssue], section_type: str)
             section_parts.append(f"\n📄 **{file_path}**\n```python")
             for issue in file_issues:
                 if issue.current_code:
-                    section_parts.append(f"line {issue.line}: {issue.current_code.strip()}")
+                    section_parts.append(
+                        f"line {issue.line}: {issue.current_code.strip()}"
+                    )
             section_parts.append("```\n")
 
     # Add tip at the end
@@ -302,9 +310,7 @@ def build_summary_review(
 
     if security_issues:
         review_parts.append("<details>")
-        review_parts.append(
-            "<summary><strong>🔒 Security Issues</strong></summary>\n"
-        )
+        review_parts.append("<summary><strong>🔒 Security Issues</strong></summary>\n")
         review_parts.append(build_severity_grouped_section(security_issues, "security"))
         review_parts.append("\n</details>\n")
 
@@ -313,7 +319,9 @@ def build_summary_review(
         review_parts.append(
             "<summary><strong>⚡ Performance Optimization</strong></summary>\n"
         )
-        review_parts.append(build_severity_grouped_section(performance_issues, "performance"))
+        review_parts.append(
+            build_severity_grouped_section(performance_issues, "performance")
+        )
         review_parts.append("\n</details>\n")
 
     if issues_by_file:

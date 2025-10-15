@@ -12,7 +12,7 @@ class SimpleContextBuilder:
     1. Git diff for changed files
     2. Import resolution and source code collection
     3. Basic code graph generation
-    4. Integration with GitHub history (your existing functionality)
+    4. Integration with GitHub history
     5. Clean output formatting
     """
 

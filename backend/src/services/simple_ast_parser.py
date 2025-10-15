@@ -24,14 +24,6 @@ LANGUAGE_MAP = {
     ".rs": "rust",
 }
 
-EXTENSION_GROUPS = {
-    "python": [".py"],
-    "javascript": [".js", ".jsx", ".mjs"],
-    "typescript": [".ts", ".tsx"],
-    "go": [".go"],
-    "rust": [".rs"],
-}
-
 
 class SimpleASTParser:
     """
@@ -109,6 +101,66 @@ class SimpleASTParser:
                         }
                     )
 
+            elif self.lang_name == "go" and node.type == "function_declaration":
+                name_node = node.child_by_field_name("name")
+                if name_node:
+                    name = node_text(name_node)
+                    params_node = node.child_by_field_name("parameters")
+                    params = node_text(params_node) if params_node else None
+
+                    functions.append(
+                        {
+                            "name": name,
+                            "type": "function",
+                            "start_line": node.start_point[0] + 1,
+                            "end_line": node.end_point[0] + 1,
+                            "parameters": params,
+                            "signature": node_text(node),
+                            "source": node_text(node),
+                        }
+                    )
+
+            elif self.lang_name == "go" and node.type == "method_declaration":
+                name_node = node.child_by_field_name("name")
+                if name_node:
+                    name = node_text(name_node)
+                    params_node = node.child_by_field_name("parameters")
+                    receiver_node = node.child_by_field_name("receiver")
+                    params = node_text(params_node) if params_node else None
+                    receiver = node_text(receiver_node) if receiver_node else None
+
+                    functions.append(
+                        {
+                            "name": name,
+                            "type": "method",
+                            "receiver": receiver,
+                            "start_line": node.start_point[0] + 1,
+                            "end_line": node.end_point[0] + 1,
+                            "parameters": params,
+                            "signature": node_text(node),
+                            "source": node_text(node),
+                        }
+                    )
+
+            elif self.lang_name == "rust" and node.type == "function_item":
+                name_node = node.child_by_field_name("name")
+                if name_node:
+                    name = node_text(name_node)
+                    params_node = node.child_by_field_name("parameters")
+                    params = node_text(params_node) if params_node else None
+
+                    functions.append(
+                        {
+                            "name": name,
+                            "type": "function",
+                            "start_line": node.start_point[0] + 1,
+                            "end_line": node.end_point[0] + 1,
+                            "parameters": params,
+                            "signature": node_text(node),
+                            "source": node_text(node),
+                        }
+                    )
+
             for child in node.children:
                 walk(child)
 
@@ -156,6 +208,84 @@ class SimpleASTParser:
                         }
                     )
 
+            elif self.lang_name == "go" and node.type == "type_spec":
+                name_node = node.child_by_field_name("name")
+                type_node = node.child_by_field_name("type")
+                if name_node and type_node:
+                    name = node_text(name_node)
+                    type_kind = type_node.type
+
+                    # Determine if it's struct or interface
+                    if type_kind == "struct_type":
+                        classes.append(
+                            {
+                                "name": name,
+                                "type": "struct",
+                                "start_line": node.start_point[0] + 1,
+                                "end_line": node.end_point[0] + 1,
+                                "source": node_text(node),
+                            }
+                        )
+                    elif type_kind == "interface_type":
+                        classes.append(
+                            {
+                                "name": name,
+                                "type": "interface",
+                                "start_line": node.start_point[0] + 1,
+                                "end_line": node.end_point[0] + 1,
+                                "source": node_text(node),
+                            }
+                        )
+
+            elif self.lang_name == "rust" and node.type == "struct_item":
+                name_node = node.child_by_field_name("name")
+                if name_node:
+                    name = node_text(name_node)
+                    classes.append(
+                        {
+                            "name": name,
+                            "type": "struct",
+                            "start_line": node.start_point[0] + 1,
+                            "end_line": node.end_point[0] + 1,
+                            "source": node_text(node),
+                        }
+                    )
+
+            elif self.lang_name == "rust" and node.type == "impl_item":
+                type_node = node.child_by_field_name("type")
+                trait_node = node.child_by_field_name("trait")
+                if type_node:
+                    name = node_text(type_node)
+                    impl_type = "impl"
+                    if trait_node:
+                        trait_name = node_text(trait_node)
+                        name = f"{trait_name} for {name}"
+                        impl_type = "trait_impl"
+
+                    classes.append(
+                        {
+                            "name": name,
+                            "type": impl_type,
+                            "start_line": node.start_point[0] + 1,
+                            "end_line": node.end_point[0] + 1,
+                            "source": node_text(node),
+                        }
+                    )
+
+            elif self.lang_name == "rust" and node.type == "trait_item":
+                name_node = node.child_by_field_name("name")
+                if name_node:
+                    name = node_text(name_node)
+                    classes.append(
+                        {
+                            "name": name,
+                            "type": "trait",
+                            "start_line": node.start_point[0] + 1,
+                            "end_line": node.end_point[0] + 1,
+                            "source": node_text(node),
+                        }
+                    )
+
             for child in node.children:
                 walk(child)
 
@@ -191,6 +321,22 @@ class SimpleASTParser:
                         if child.type == "string":
                             text = node_text(child).strip('"').strip("'")
                             imports.append(text)
+
+            elif self.lang_name == "go":
+                if node.type == "import_spec":
+                    # Import spec contains a string with the package path
+                    for child in node.children:
+                        if child.type == "interpreted_string_literal":
+                            text = node_text(child).strip('"')
+                            imports.append(text)
+
+            elif self.lang_name == "rust":
+                if node.type == "use_declaration":
+                    # Extract the argument field which contains the import path
+                    arg_node = node.child_by_field_name("argument")
+                    if arg_node:
+                        import_path = node_text(arg_node)
+                        imports.append(import_path)
 
             for child in node.children:
                 walk(child)

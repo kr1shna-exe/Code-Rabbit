@@ -37,11 +37,110 @@ def build_simple_graph(tree, source_code: str, lang: str, file_path: str) -> nx.
                     if current_function:
                         graph.add_edge(current_function, class_label, type="contains")
 
+        elif lang == "go":
+            if node.type == "function_declaration":
+                name_node = node.child_by_field_name("name")
+                if name_node:
+                    name = node_text(name_node)
+                    func_label = f"{file_path}::function::{name}"
+                    graph.add_node(func_label, type="function", name=name)
+                    if current_function:
+                        graph.add_edge(current_function, func_label, type="contains")
+                    current_function = func_label
+
+            elif node.type == "method_declaration":
+                name_node = node.child_by_field_name("name")
+                if name_node:
+                    name = node_text(name_node)
+                    func_label = f"{file_path}::method::{name}"
+                    graph.add_node(func_label, type="method", name=name)
+                    if current_function:
+                        graph.add_edge(current_function, func_label, type="contains")
+                    current_function = func_label
+
+            elif node.type == "type_spec":
+                name_node = node.child_by_field_name("name")
+                type_node = node.child_by_field_name("type")
+                if name_node and type_node:
+                    name = node_text(name_node)
+                    type_kind = type_node.type
+                    if type_kind in ("struct_type", "interface_type"):
+                        class_label = f"{file_path}::type::{name}"
+                        graph.add_node(class_label, type=type_kind, name=name)
+                        if current_function:
+                            graph.add_edge(current_function, class_label, type="contains")
+
+        elif lang == "rust":
+            if node.type == "function_item":
+                name_node = node.child_by_field_name("name")
+                if name_node:
+                    name = node_text(name_node)
+                    func_label = f"{file_path}::function::{name}"
+                    graph.add_node(func_label, type="function", name=name)
+                    if current_function:
+                        graph.add_edge(current_function, func_label, type="contains")
+                    current_function = func_label
+
+            elif node.type == "struct_item":
+                name_node = node.child_by_field_name("name")
+                if name_node:
+                    name = node_text(name_node)
+                    class_label = f"{file_path}::struct::{name}"
+                    graph.add_node(class_label, type="struct", name=name)
+                    if current_function:
+                        graph.add_edge(current_function, class_label, type="contains")
+
+            elif node.type == "impl_item":
+                type_node = node.child_by_field_name("type")
+                if type_node:
+                    name = node_text(type_node)
+                    class_label = f"{file_path}::impl::{name}"
+                    graph.add_node(class_label, type="impl", name=name)
+                    if current_function:
+                        graph.add_edge(current_function, class_label, type="contains")
+
+            elif node.type == "trait_item":
+                name_node = node.child_by_field_name("name")
+                if name_node:
+                    name = node_text(name_node)
+                    class_label = f"{file_path}::trait::{name}"
+                    graph.add_node(class_label, type="trait", name=name)
+                    if current_function:
+                        graph.add_edge(current_function, class_label, type="contains")
+
         # Track imports
         if lang == "python" and node.type in (
             "import_statement",
             "import_from_statement",
         ):
+            import_text = node_text(node).strip()
+            imp_label = f"{file_path}::import::{import_text}"
+            graph.add_node(imp_label, type="import", text=import_text)
+
+            # Connect import to file or function
+            if current_function:
+                graph.add_edge(current_function, imp_label, type="uses")
+            else:
+                file_anchor = f"{file_path}::file"
+                if file_anchor not in graph:
+                    graph.add_node(file_anchor, type="file")
+                graph.add_edge(file_anchor, imp_label, type="imports")
+
+        elif lang == "go" and node.type == "import_spec":
+            import_text = node_text(node).strip()
+            imp_label = f"{file_path}::import::{import_text}"
+            graph.add_node(imp_label, type="import", text=import_text)
+
+            # Connect import to file or function
+            if current_function:
+                graph.add_edge(current_function, imp_label, type="uses")
+            else:
+                file_anchor = f"{file_path}::file"
+                if file_anchor not in graph:
+                    graph.add_node(file_anchor, type="file")
+                graph.add_edge(file_anchor, imp_label, type="imports")
+
+        elif lang == "rust" and node.type == "use_declaration":
             import_text = node_text(node).strip()
             imp_label = f"{file_path}::import::{import_text}"
             graph.add_node(imp_label, type="import", text=import_text)
@@ -66,6 +165,24 @@ def build_simple_graph(tree, source_code: str, lang: str, file_path: str) -> nx.
             if func_node and current_function:
                 called_name = node_text(func_node).split("(")[0].strip()
                 if called_name and called_name.replace("_", "").isalnum():
+                    call_label = f"{file_path}::call::{called_name}"
+                    graph.add_node(call_label, type="call", name=called_name)
+                    graph.add_edge(current_function, call_label, type="calls")
+
+        elif lang == "go" and node.type == "call_expression":
+            func_node = node.child_by_field_name("function")
+            if func_node and current_function:
+                called_name = node_text(func_node).strip()
+                if called_name:
+                    call_label = f"{file_path}::call::{called_name}"
+                    graph.add_node(call_label, type="call", name=called_name)
+                    graph.add_edge(current_function, call_label, type="calls")
+
+        elif lang == "rust" and node.type == "call_expression":
+            func_node = node.child_by_field_name("function")
+            if func_node and current_function:
+                called_name = node_text(func_node).strip()
+                if called_name:
                     call_label = f"{file_path}::call::{called_name}"
                     graph.add_node(call_label, type="call", name=called_name)
                     graph.add_edge(current_function, call_label, type="calls")

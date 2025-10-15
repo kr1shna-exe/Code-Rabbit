@@ -14,6 +14,7 @@ class HistoryFetcher:
             repo = self.github.get_repo(repo_name)
             pr = repo.get_pull(pr_number)
             maintainer_usernames = self._get_maintainers(repo)
+            bot_name = f"{settings.github_app_slug}"
 
             return {
                 "pr_info": {
@@ -26,7 +27,9 @@ class HistoryFetcher:
                     "head_branch": pr.head.ref,
                 },
                 "commits": self._get_pr_commits(pr),
-                "all_comments": self._get_all_pr_comments(pr, maintainer_usernames=maintainer_usernames),
+                "all_comments": self._get_all_pr_comments(
+                    pr, maintainer_usernames=maintainer_usernames, bot_name=bot_name
+                ),
                 "maintainers": maintainer_usernames,
             }
         except Exception as e:
@@ -35,7 +38,7 @@ class HistoryFetcher:
                 "error": str(e),
                 "pr_info": {"title": "N/A", "description": "N/A", "author": "N/A"},
                 "commits": [],
-                "all_comments": []
+                "all_comments": [],
             }
 
     def _get_pr_commits(self, pr) -> List[Dict]:
@@ -52,34 +55,12 @@ class HistoryFetcher:
             )
         return commits
 
-    def _get_comments(self, pr, bot_name: str = "My-Code-Comment-Bot") -> List[Dict]:
-        bot_comments = []
-        for comment in pr.get_issue_comments():
-            if comment.user.login.lower() == bot_name.lower():
-                bot_comments.append(
-                    {
-                        "type": "issue_comment",
-                        "comment": comment.body,
-                        "created_at": comment.created_at.isoformat(),
-                        "author": comment.user.login,
-                    }
-                )
-
-        for comment in pr.get_review_comments():
-            if comment.user.login.lower() == bot_name.lower():
-                bot_comments.append(
-                    {
-                        "type": "review_comment",
-                        "comment": comment.body,
-                        "file": comment.path,
-                        "line": comment.position,
-                        "created_at": comment.created_at.isoformat(),
-                        "author": comment.user.login,
-                    }
-                )
-        return bot_comments
-
-    def _get_all_pr_comments(self, pr, bot_name: str = "my-code-comment-bot[bot]", maintainer_usernames: list = None):
+    def _get_all_pr_comments(
+        self,
+        pr,
+        bot_name: str,
+        maintainer_usernames: list = None,
+    ):
         all_comments = []
         bot_comment_ids = set()
         if maintainer_usernames is None:
@@ -97,7 +78,9 @@ class HistoryFetcher:
                         "user_response": [],
                     }
                 )
-            elif comment.user.login.lower() in [name.lower() for name in maintainer_usernames]:
+            elif comment.user.login.lower() in [
+                name.lower() for name in maintainer_usernames
+            ]:
                 bot_comment_ids.add(comment.id)
                 all_comments.append(
                     {
@@ -116,7 +99,7 @@ class HistoryFetcher:
                         "comment": comment.body,
                         "author": comment.user.login,
                         "created_at": comment.created_at.isoformat(),
-                        "in_reply_to": getattr(comment, 'in_reply_to', None),
+                        "in_reply_to": getattr(comment, "in_reply_to", None),
                     }
                 )
         return all_comments
@@ -127,9 +110,12 @@ class HistoryFetcher:
             collaborators = repo.get_collaborators()
             for collaborator in collaborators:
                 permissions = collaborator.permissions
-                if (permissions.push or permissions.admin or
-                    getattr(permissions, 'maintain', False) or
-                    collaborator.permissions.admin):  
+                if (
+                    permissions.push
+                    or permissions.admin
+                    or getattr(permissions, "maintain", False)
+                    or collaborator.permissions.admin
+                ):
                     maintainers.append(collaborator.login)
 
             if repo.owner.login not in maintainers:
