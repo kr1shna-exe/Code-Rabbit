@@ -69,6 +69,8 @@ GitHub PR Event → Webhook → Clone Repo → Parse AST → Index to Vector DB
 
 ### Multi-Agent Workflow
 
+![Multi Agent System](./frontend/public/Multi-Agent.png)
+
 The review process uses **LangGraph** to orchestrate agents:
 
 1. **Context Fetcher Agent** (Entry Point)
