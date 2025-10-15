@@ -2,7 +2,7 @@
 
 An AI-powered code review system that automatically analyzes pull requests using a sophisticated multi-agent architecture. CodeBoss combines AST parsing, vector databases, and parallel AI agents to provide comprehensive, context-aware code reviews on GitHub.
 
-![Architecture Overview](./frontend/public/System-Architecture.png)
+![Architecture Overview](./frontend/public/System-Architecture.svg)
 
 ## 🎯 Overview
 
