@@ -52,7 +52,7 @@ export default function About() {
           <div className="absolute inset-0 bg-black/70 rounded-3xl z-1 -my-4" />
           <div className="relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-x-6 gap-y-12 sm:gap-x-8 sm:gap-y-16 lg:gap-x-30 lg:gap-y-40 max-w-5xl mx-auto">
             <div className="relative group">
-              <div className="bg-gradient-to-b from-[#1587a666] from-1% to-[#083440]/25 to-10% rounded-3xl p-6 sm:p-8 h-auto min-h-[400px] sm:min-h-[450px] lg:min-h-[500px] flex flex-col">
+              <div className="bg-gradient-to-b from-[#1587a666] from-1% to-[#083440]/25 to-10% rounded-3xl p-6 sm:p-8 h-auto min-h-[400px] sm:min-h-[450px] lg:max-h-[500px] flex flex-col">
                 <div className="flex mb-10">
                   <div className="w-[200px] sm:w-[250px] bg-center bg-cover bg-no-repeat rounded-lg">
                     <Image
@@ -76,7 +76,7 @@ export default function About() {
               </div>
             </div>
             <div className="relative group">
-              <div className="bg-gradient-to-b from-[#1587a666] from-1% to-[#083440]/25 to-10% rounded-3xl p-6 sm:p-8 h-auto min-h-[400px] sm:min-h-[450px] lg:min-h-[500px] flex flex-col">
+              <div className="bg-gradient-to-b from-[#1587a666] from-1% to-[#083440]/25 to-10% rounded-3xl p-6 sm:p-8 h-auto min-h-[400px] sm:min-h-[450px] lg:max-h-[500px] flex flex-col">
                 <div className="flex mb-5">
                   <div className="w-[200px] sm:w-[170px] bg-center bg-cover bg-no-repeat rounded-lg">
                     <Image
@@ -94,14 +94,14 @@ export default function About() {
                   <p className="text-white font-light font-'Montserrat' text-base sm:text-lg lg:text-xl leading-relaxed">
                     Receive comprehensive code reviews within minutes of
                     creating a pull request. Get context-aware feedback,
-                    security findings, and improvement suggestions across your
-                    entire codebase—no manual review requests needed
+                    security implications, suggestions across your entire
+                    codebase
                   </p>
                 </div>
               </div>
             </div>
             <div className="relative group">
-              <div className="bg-gradient-to-b from-[#1587a666] from-1% to-[#083440]/25 to-10% rounded-3xl p-6 sm:p-8 h-auto min-h-[400px] sm:min-h-[450px] lg:min-h-[500px] flex flex-col">
+              <div className="bg-gradient-to-b from-[#1587a666] from-1% to-[#083440]/25 to-10% rounded-3xl p-6 sm:p-8 h-auto min-h-[400px] sm:min-h-[450px] lg:max-h-[500px] flex flex-col">
                 <div className="flex mb-8">
                   <div className="w-[200px] sm:w-[170px] bg-center bg-cover bg-no-repeat rounded-lg">
                     <Image
@@ -125,7 +125,7 @@ export default function About() {
               </div>
             </div>
             <div className="relative group">
-              <div className="bg-gradient-to-b from-[#1587a666] from-1% to-[#083440]/25 to-10% rounded-3xl p-6 sm:p-8 h-auto min-h-[400px] sm:min-h-[450px] lg:min-h-[500px] flex flex-col">
+              <div className="bg-gradient-to-b from-[#1587a666] from-1% to-[#083440]/25 to-10% rounded-3xl p-6 sm:p-8 h-auto min-h-[400px] sm:min-h-[450px] lg:max-h-[500px] flex flex-col">
                 <div className="flex mb-12">
                   <div className="w-[200px] sm:w-[180px] bg-center bg-cover bg-no-repeat rounded-lg">
                     <Image
