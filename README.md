@@ -1,10 +1,10 @@
-# CodeBoss 🤖
+# CodeBoss
 
 An AI-powered code review system that automatically analyzes pull requests using a sophisticated multi-agent architecture. CodeBoss combines AST parsing, vector databases, and parallel AI agents to provide comprehensive, context-aware code reviews on GitHub.
 
 ![Architecture Overview](./frontend/public/System-Architecture.svg)
 
-## 🎯 Overview
+## Overview
 
 CodeBoss is an intelligent GitHub bot that automatically reviews pull requests by leveraging:
 
@@ -13,34 +13,34 @@ CodeBoss is an intelligent GitHub bot that automatically reviews pull requests b
 - **AST Parsing**: Deep code understanding through Abstract Syntax Tree analysis
 - **Continuous Learning**: Improves review quality by learning from maintainer feedback
 
-## ✨ Key Features
+## Key Features
 
-### 🔍 Intelligent Code Analysis
+### Intelligent Code Analysis
 
 - **AST-Based Parsing**: Deep semantic understanding of code structure using tree-sitter
 - **Multi-Language Support**: Python, JavaScript, TypeScript, Go, and Rust
 - **Context-Aware Reviews**: Leverages PR history, commit messages, and related code
 
-### 🧠 Multi-Agent Architecture
+### Multi-Agent Architecture
 
 - **Parallel Execution**: Three specialized agents analyze code simultaneously
 - **Security Agent**: Identifies vulnerabilities, security risks, and unsafe patterns
 - **Code Quality Agent**: Reviews best practices, design patterns, and maintainability
 - **Performance Agent**: Detects performance bottlenecks and optimization opportunities
 
-### 📊 Vector Database Memory
+### Vector Database Memory
 
 - **Code Graphs**: Stores AST-parsed functions, classes, and relationships
 - **Import Dependencies**: Tracks file dependencies and import patterns
 - **Learning System**: Indexes maintainer feedback for continuous improvement
 
-### 🔄 Continuous Learning
+### Continuous Learning
 
 - Learns from bot reviews + user feedback
 - Incorporates maintainer review patterns
 - Improves suggestions over time
 
-## 🏗️ Architecture
+## Architecture
 
 ### System Architecture
 
@@ -100,7 +100,7 @@ CodeBoss uses **Qdrant** with three specialized collections:
 | `import_files` | Dependencies         | Source code with import/dependency tracking |
 | `learnings`    | Historical Knowledge | Bot reviews + maintainer feedback patterns  |
 
-## 🛠️ Technology Stack
+## Technology Stack
 
 ### Backend
 
@@ -122,7 +122,7 @@ CodeBoss uses **Qdrant** with three specialized collections:
 | **Animations** | Framer Motion        |
 | **Language**   | TypeScript           |
 
-## 🚀 How It Works
+## How It Works
 
 ### 1. Webhook Reception
 
@@ -193,7 +193,7 @@ Posts review as:
 - **Pull Request Review**: With inline comments and suggestions
 - **Review Event**: `REQUEST_CHANGES` (if issues found) or `COMMENT`
 
-## 📦 Setup & Installation
+## Setup & Installation
 
 ### Prerequisites
 
@@ -264,7 +264,7 @@ cd backend
 docker-compose up -d
 ```
 
-## 🔧 Configuration
+## Configuration
 
 ### Environment Variables
 
@@ -302,7 +302,7 @@ TEMP_REPO_DIR=./temp_repos
    - **Metadata**: Read
 5. Generate private key and add to `.env`
 
-## 📊 Project Structure
+## Project Structure
 
 ```
 CodeBoss/
@@ -350,7 +350,7 @@ CodeBoss/
     └── public/                    # Static assets & images
 ```
 
-## 🔄 Development Workflow
+## Development Workflow
 
 ### Backend Development
 
@@ -381,7 +381,7 @@ npm run build        # Production build
 npm run lint         # ESLint
 ```
 
-## 🎯 API Endpoints
+## API Endpoints
 
 | Endpoint               | Method | Description                  |
 | ---------------------- | ------ | ---------------------------- |
@@ -389,7 +389,7 @@ npm run lint         # ESLint
 | `/api/health`          | GET    | Health check                 |
 | `/api/github-app-info` | GET    | GitHub App installation info |
 
-## 🧪 Testing the System
+## Testing the System
 
 1. Install the GitHub App on a test repository
 2. Create a pull request with code changes
@@ -399,22 +399,20 @@ npm run lint         # ESLint
    - Run multi-agent analysis
    - Post review comments
 
-## 🌟 Why CodeBoss?
+## Why CodeBoss?
 
 ### Traditional Code Review Problems
 
-- ⏰ Time-consuming manual reviews
-- 🔍 Missing edge cases and security issues
-- 📉 Inconsistent review quality
-- 🔄 Repetitive feedback on common issues
+- Time-consuming manual reviews
+- Missing edge cases and security issues
+- Inconsistent review quality
+- Repetitive feedback on common issues
 
 ### CodeBoss Solutions
 
-- ⚡ Instant automated analysis
-- 🛡️ Comprehensive security scanning
-- 🎯 Consistent, high-quality reviews
-- 🧠 Learns from team patterns
-
-Built with ❤️ as part of the Super30 community
+- Instant automated analysis
+- Comprehensive security scanning
+- Consistent, high-quality reviews
+- Learns from team patterns
 
 ---
